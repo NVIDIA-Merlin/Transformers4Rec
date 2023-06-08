@@ -344,6 +344,14 @@
 
 
 <div class="viewcode-block" id="EmbeddingBagWrapper"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingBagWrapper">[docs]</a><span class="k">class</span> <span class="nc">EmbeddingBagWrapper</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">EmbeddingBag</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper class for the PyTorch EmbeddingBag module.</span>
+
+<span class="sd">    This class extends the torch.nn.EmbeddingBag class and overrides</span>
+<span class="sd">    the forward method to handle 1D tensor inputs</span>
+<span class="sd">    by reshaping them to 2D as required by the EmbeddingBag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="EmbeddingBagWrapper.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingBagWrapper.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># EmbeddingBag requires 2D tensors (or offsets)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -492,6 +500,29 @@
 
 
 <div class="viewcode-block" id="TableConfig"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TableConfig">[docs]</a><span class="k">class</span> <span class="nc">TableConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to configure the embeddings lookup table for a categorical feature.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vocabulary_size : int</span>
+<span class="sd">        The size of the vocabulary,</span>
+<span class="sd">        i.e., the cardinality of the categorical feature.</span>
+<span class="sd">    dim : int</span>
+<span class="sd">        The dimensionality of the embedding vectors.</span>
+<span class="sd">    initializer : Optional[Callable[[torch.Tensor], None]]</span>
+<span class="sd">        The initializer function for the embedding weights.</span>
+<span class="sd">        If None, the weights are initialized using a normal</span>
+<span class="sd">        distribution with mean 0.0 and standard deviation 0.05.</span>
+<span class="sd">    combiner : Optional[str]</span>
+<span class="sd">        The combiner operation used to aggregate bag of embeddings.</span>
+<span class="sd">        Possible options are &quot;mean&quot;, &quot;sum&quot;, and &quot;sqrtn&quot;.</span>
+<span class="sd">        By default &quot;mean&quot;.</span>
+<span class="sd">    name : Optional[str]</span>
+<span class="sd">        The name of the lookup table.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">vocabulary_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -536,6 +567,23 @@
 
 
 <div class="viewcode-block" id="FeatureConfig"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.FeatureConfig">[docs]</a><span class="k">class</span> <span class="nc">FeatureConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to set the embeddings table of a categorical feature</span>
+<span class="sd">    with a maximum sequence length.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    table : TableConfig</span>
+<span class="sd">        Configuration for the lookup table,</span>
+<span class="sd">        which is used for embedding lookup and aggregation.</span>
+<span class="sd">    max_sequence_length : int, optional</span>
+<span class="sd">        Maximum sequence length for sequence features.</span>
+<span class="sd">        By default 0.</span>
+<span class="sd">    name : str, optional</span>
+<span class="sd">        The feature name.</span>
+<span class="sd">        By default None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="n">TableConfig</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">):</span>

@@ -122,10 +122,27 @@
 <dt id="transformers4rec.torch.model.prediction_task.BinaryClassificationPrepareBlock">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">BinaryClassificationPrepareBlock</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#BinaryClassificationPrepareBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.BinaryClassificationPrepareBlock" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></code></a></p>
+<p>Prepares the output layer of the binary classification prediction task.
+The output layer is a SequentialBlock of a torch linear
+layer followed by a sigmoid activation and a squeeze operation.</p>
 <dl class="py method">
 <dt id="transformers4rec.torch.model.prediction_task.BinaryClassificationPrepareBlock.build">
 <code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.SequentialBlock" title="transformers4rec.torch.block.base.SequentialBlock"><span class="pre">transformers4rec.torch.block.base.SequentialBlock</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#BinaryClassificationPrepareBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.BinaryClassificationPrepareBlock.build" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Builds the output layer of binary classification based on the input_size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_size</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – The size of the input tensor, specifically the last dimension is
+used for setting the input dimension of the linear layer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A SequentialBlock consisting of a linear layer (with input dimension equal to the last
+dimension of input_size), a sigmoid activation, and a squeeze operation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.SequentialBlock" title="transformers4rec.torch.SequentialBlock">SequentialBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -226,10 +243,27 @@ The default metrics are <code class="docutils literal notranslate"><span class="
 <dt id="transformers4rec.torch.model.prediction_task.RegressionPrepareBlock">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">RegressionPrepareBlock</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#RegressionPrepareBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionPrepareBlock" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></code></a></p>
+<p>Prepares the output layer of the regression prediction task.
+The output layer is a SequentialBlock of a torch linear
+layer followed by a squeeze operation.</p>
 <dl class="py method">
 <dt id="transformers4rec.torch.model.prediction_task.RegressionPrepareBlock.build">
 <code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.SequentialBlock" title="transformers4rec.torch.block.base.SequentialBlock"><span class="pre">transformers4rec.torch.block.base.SequentialBlock</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#RegressionPrepareBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionPrepareBlock.build" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Builds the output layer of regression based on the input_size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_size</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – The size of the input tensor, specifically the last dimension is
+used for setting the input dimension of the linear layer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A SequentialBlock consisting of a linear layer (with input dimension equal to
+the last dimension of input_size), and a squeeze operation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.SequentialBlock" title="transformers4rec.torch.SequentialBlock">SequentialBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -237,6 +271,74 @@ The default metrics are <code class="docutils literal notranslate"><span class="
 <dt id="transformers4rec.torch.model.prediction_task.RegressionTask">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">RegressionTask</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_block</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">MSELoss()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(MeanSquaredError())</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#RegressionTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionTask" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.model.base.PredictionTask</span></code></p>
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">PredictionTask</span></code> for regression.</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define the input module to process the tabular input features.</span>
+<span class="n">input_module</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+    <span class="n">schema</span><span class="p">,</span>
+    <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
+    <span class="n">continuous_projection</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;concat&quot;</span><span class="p">,</span>
+    <span class="n">masking</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Define XLNetConfig class and set default parameters for HF XLNet config.</span>
+<span class="n">transformer_config</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span> <span class="n">n_head</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">n_layer</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">total_seq_length</span><span class="o">=</span><span class="n">max_sequence_length</span>
+<span class="p">)</span>
+
+<span class="c1"># Define the model block including: inputs, projection and transformer block.</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">SequentialBlock</span><span class="p">(</span>
+    <span class="n">input_module</span><span class="p">,</span>
+    <span class="n">tr</span><span class="o">.</span><span class="n">MLPBlock</span><span class="p">([</span><span class="mi">64</span><span class="p">]),</span>
+    <span class="n">tr</span><span class="o">.</span><span class="n">TransformerBlock</span><span class="p">(</span>
+        <span class="n">transformer_config</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Define a head with BinaryClassificationTask.</span>
+<span class="n">head</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
+    <span class="n">body</span><span class="p">,</span>
+    <span class="n">tr</span><span class="o">.</span><span class="n">RegressionTask</span><span class="p">(</span>
+        <span class="s2">&quot;watch_time&quot;</span><span class="p">,</span>
+        <span class="n">summary_type</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">tm</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">()]</span>
+    <span class="p">),</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="n">input_module</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Get the end-to-end Model class.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_name</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – Specifies the variable name that represents the continuous value to predict.
+By default None</p></li>
+<li><p><strong>task_name</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – Specifies the name of the prediction task. If this parameter is not specified,
+a name is automatically constructed based on <code class="docutils literal notranslate"><span class="pre">target_name</span></code> and the Python
+class name of the model.
+By default None</p></li>
+<li><p><strong>task_block</strong> (<em>Optional</em><em>[</em><em>BlockType</em><em>] </em><em>= None</em>) – Specifies a module to transform the input tensor before computing predictions.</p></li>
+<li><p><strong>loss</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.0)"><em>torch.nn.Module</em></a>) – Specifies the loss function for the task.
+The default class is <code class="docutils literal notranslate"><span class="pre">torch.nn.MSELoss</span></code>.</p></li>
+<li><p><strong>metrics</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.0)"><em>torch.nn.Module</em></a><em>, </em><em>..</em><em>]</em>) – Specifies the metrics to calculate during training and evaluation.
+The default metric is MeanSquaredError.</p></li>
+<li><p><strong>summary_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – <p>Summarizes a sequence into a single tensor. Accepted values are:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">last</span></code> – Take the last token hidden state (like XLNet)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first</span></code> – Take the first token hidden state (like Bert)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code> – Take the mean of all tokens hidden states</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cls_index</span></code> – Supply a Tensor of classification token position (GPT/GPT-2)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attn</span></code> – Not implemented now, use multi-head attention</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt id="transformers4rec.torch.model.prediction_task.RegressionTask.DEFAULT_LOSS">
 <code class="sig-name descname"><span class="pre">DEFAULT_LOSS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">MSELoss()</span></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionTask.DEFAULT_LOSS" title="Permalink to this definition"></a></dt>
@@ -322,10 +424,43 @@ Value 1.0 reduces to regular softmax.</p></li>
 <dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">NextItemPredictionPrepareBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_tying</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_embedding_table</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.0)"><span class="pre">torch.nn.modules.module.Module</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_temperature</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampled_softmax</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_samples</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionPrepareBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></code></a></p>
+<p>Prepares the output layer of the next item prediction task.
+The output layer is a an instance of <cite>_NextItemPredictionTask</cite> class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_dim</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The output dimension for next-item predictions.</p></li>
+<li><p><strong>weight_tying</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, ties the weights of the prediction layer and the item embedding layer.
+By default False.</p></li>
+<li><p><strong>item_embedding_table</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.0)"><em>torch.nn.Module</em></a><em>, </em><em>optional</em>) – The module containing the item embedding table.
+By default None.</p></li>
+<li><p><strong>softmax_temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – The temperature to be applied to the softmax function. Defaults to 0.</p></li>
+<li><p><strong>sampled_softmax</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, sampled softmax is used for approximating the full softmax function.
+By default False.</p></li>
+<li><p><strong>max_n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – The maximum number of samples when using sampled softmax.
+By default 100.</p></li>
+<li><p><strong>min_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – The minimum value of the range for the log-uniform sampling.
+By default 0.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock.build">
 <code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.Block" title="transformers4rec.torch.block.base.Block"><span class="pre">transformers4rec.torch.block.base.Block</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionPrepareBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock.build" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Builds the output layer of next-item prediction based on the input_size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_size</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – The size of the input tensor, specifically the last dimension is
+used for setting the input dimension of the output layer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an instance of _NextItemPredictionTask</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.Block" title="transformers4rec.torch.Block">Block</a>[_NextItemPredictionTask]</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
