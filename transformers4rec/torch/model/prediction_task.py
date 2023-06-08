@@ -33,7 +33,26 @@ LOG = logging.getLogger("transformers4rec")
 
 
 class BinaryClassificationPrepareBlock(BuildableBlock):
+    """Prepares the output layer of the binary classification prediction task.
+    The output layer is a SequentialBlock of a torch linear
+    layer followed by a sigmoid activation and a squeeze operation.
+    """
+
     def build(self, input_size) -> SequentialBlock:
+        """Builds the output layer of binary classification based on the input_size.
+
+        Parameters
+        ----------
+        input_size: Tuple[int]
+            The size of the input tensor, specifically the last dimension is
+            used for setting the input dimension of the linear layer.
+
+        Returns
+        -------
+        SequentialBlock
+            A SequentialBlock consisting of a linear layer (with input dimension equal to the last
+            dimension of input_size), a sigmoid activation, and a squeeze operation.
+        """
         return SequentialBlock(
             torch.nn.Linear(input_size[-1], 1, bias=False),
             torch.nn.Sigmoid(),
@@ -155,7 +174,26 @@ class BinaryClassificationTask(PredictionTask):
 
 
 class RegressionPrepareBlock(BuildableBlock):
+    """Prepares the output layer of the regression prediction task.
+    The output layer is a SequentialBlock of a torch linear
+    layer followed by a squeeze operation.
+    """
+
     def build(self, input_size) -> SequentialBlock:
+        """Builds the output layer of regression based on the input_size.
+
+        Parameters
+        ----------
+        input_size: Tuple[int]
+            The size of the input tensor, specifically the last dimension is
+            used for setting the input dimension of the linear layer.
+
+        Returns
+        -------
+        SequentialBlock
+            A SequentialBlock consisting of a linear layer (with input dimension equal to
+            the last dimension of input_size), and a squeeze operation.
+        """
         return SequentialBlock(
             torch.nn.Linear(input_size[-1], 1),
             LambdaModule(lambda x: torch.squeeze(x, -1)),
@@ -166,6 +204,81 @@ class RegressionPrepareBlock(BuildableBlock):
 
 
 class RegressionTask(PredictionTask):
+    """Returns a ``PredictionTask`` for regression.
+
+    Example usage::
+
+        # Define the input module to process the tabular input features.
+        input_module = tr.TabularSequenceFeatures.from_schema(
+            schema,
+            max_sequence_length=max_sequence_length,
+            continuous_projection=d_model,
+            aggregation="concat",
+            masking=None,
+        )
+
+        # Define XLNetConfig class and set default parameters for HF XLNet config.
+        transformer_config = tr.XLNetConfig.build(
+            d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
+        )
+
+        # Define the model block including: inputs, projection and transformer block.
+        body = tr.SequentialBlock(
+            input_module,
+            tr.MLPBlock([64]),
+            tr.TransformerBlock(
+                transformer_config,
+            )
+        )
+
+        # Define a head with BinaryClassificationTask.
+        head = tr.Head(
+            body,
+            tr.RegressionTask(
+                "watch_time",
+                summary_type="mean",
+                metrics=[tm.regression.MeanSquaredError()]
+            ),
+            inputs=input_module,
+        )
+
+        # Get the end-to-end Model class.
+        model = tr.Model(head)
+
+    Parameters
+    ----------
+
+    target_name: Optional[str]
+        Specifies the variable name that represents the continuous value to predict.
+        By default None
+
+    task_name: Optional[str]
+        Specifies the name of the prediction task. If this parameter is not specified,
+        a name is automatically constructed based on ``target_name`` and the Python
+        class name of the model.
+        By default None
+
+    task_block: Optional[BlockType] = None
+        Specifies a module to transform the input tensor before computing predictions.
+
+    loss: torch.nn.Module
+        Specifies the loss function for the task.
+        The default class is ``torch.nn.MSELoss``.
+
+    metrics: Tuple[torch.nn.Module, ...]
+        Specifies the metrics to calculate during training and evaluation.
+        The default metric is MeanSquaredError.
+
+    summary_type: str
+        Summarizes a sequence into a single tensor. Accepted values are:
+
+            - ``last`` -- Take the last token hidden state (like XLNet)
+            - ``first`` -- Take the first token hidden state (like Bert)
+            - ``mean`` -- Take the mean of all tokens hidden states
+            - ``cls_index`` -- Supply a Tensor of classification token position (GPT/GPT-2)
+            - ``attn`` -- Not implemented now, use multi-head attention
+    """
+
     DEFAULT_LOSS = torch.nn.MSELoss()
     DEFAULT_METRICS = (tm.regression.MeanSquaredError(),)
 
@@ -395,6 +508,32 @@ class NextItemPredictionTask(PredictionTask):
 
 
 class NextItemPredictionPrepareBlock(BuildableBlock):
+    """Prepares the output layer of the next item prediction task.
+    The output layer is a an instance of `_NextItemPredictionTask` class.
+
+    Parameters
+    ----------
+    target_dim: int
+        The output dimension for next-item predictions.
+    weight_tying: bool, optional
+        If true, ties the weights of the prediction layer and the item embedding layer.
+        By default False.
+    item_embedding_table: torch.nn.Module, optional
+        The module containing the item embedding table.
+        By default None.
+    softmax_temperature: float, optional
+        The temperature to be applied to the softmax function. Defaults to 0.
+    sampled_softmax: bool, optional
+        If true, sampled softmax is used for approximating the full softmax function.
+        By default False.
+    max_n_samples: int, optional
+        The maximum number of samples when using sampled softmax.
+        By default 100.
+    min_id: int, optional
+        The minimum value of the range for the log-uniform sampling.
+        By default 0.
+    """
+
     def __init__(
         self,
         target_dim: int,
@@ -415,6 +554,18 @@ class NextItemPredictionPrepareBlock(BuildableBlock):
         self.min_id = min_id
 
     def build(self, input_size) -> Block:
+        """Builds the output layer of next-item prediction based on the input_size.
+
+        Parameters
+        ----------
+        input_size : Tuple[int]
+            The size of the input tensor, specifically the last dimension is
+            used for setting the input dimension of the output layer.
+        Returns
+        -------
+        Block[_NextItemPredictionTask]
+            an instance of _NextItemPredictionTask
+        """
         return Block(
             _NextItemPredictionTask(
                 input_size,
@@ -505,7 +656,7 @@ class _NextItemPredictionTask(torch.nn.Module):
         if self.sampled_softmax and training:
             logits, targets = self.sampled(inputs, targets, output_weights)
         else:
-            logits = inputs @ output_weights.t()
+            logits = inputs @ output_weights.t()  # type: ignore
 
         if self.softmax_temperature:
             # Softmax temperature to reduce model overconfidence
@@ -625,7 +776,9 @@ class LogUniformSampler(torch.nn.Module):
         log_indices = torch.arange(1.0, max_id - min_id + 2.0, 1.0).log_()
         probs = (log_indices[1:] - log_indices[:-1]) / log_indices[-1]
         if min_id > 0:
-            probs = torch.cat([torch.zeros([min_id], dtype=probs.dtype), probs], axis=0)
+            probs = torch.cat(
+                [torch.zeros([min_id], dtype=probs.dtype), probs], axis=0
+            )  # type: ignore
         return probs
 
     def get_unique_sampling_distr(self, dist, n_sample):
@@ -682,9 +835,9 @@ class LogUniformSampler(torch.nn.Module):
         n_tries = self.n_sample
 
         with torch.no_grad():
-            neg_samples = torch.multinomial(self.dist, n_tries, replacement=True).unique()[
-                : self.max_n_samples
-            ]
+            neg_samples = torch.multinomial(
+                self.dist, n_tries, replacement=True  # type: ignore
+            ).unique()[: self.max_n_samples]
 
             device = labels.device
             neg_samples = neg_samples.to(device)
@@ -694,8 +847,8 @@ class LogUniformSampler(torch.nn.Module):
             else:
                 dist = self.dist
 
-            true_probs = dist[labels]
-            samples_probs = dist[neg_samples]
+            true_probs = dist[labels]  # type: ignore
+            samples_probs = dist[neg_samples]  # type: ignore
 
             return neg_samples, true_probs, samples_probs
 

@@ -258,6 +258,14 @@ class EmbeddingFeatures(InputBlock):
 
 
 class EmbeddingBagWrapper(torch.nn.EmbeddingBag):
+    """
+    Wrapper class for the PyTorch EmbeddingBag module.
+
+    This class extends the torch.nn.EmbeddingBag class and overrides
+    the forward method to handle 1D tensor inputs
+    by reshaping them to 2D as required by the EmbeddingBag.
+    """
+
     def forward(self, input, **kwargs):
         # EmbeddingBag requires 2D tensors (or offsets)
         if len(input.shape) == 1:
@@ -406,6 +414,29 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
 
 
 class TableConfig:
+    """
+    Class to configure the embeddings lookup table for a categorical feature.
+
+    Attributes
+    ----------
+    vocabulary_size : int
+        The size of the vocabulary,
+        i.e., the cardinality of the categorical feature.
+    dim : int
+        The dimensionality of the embedding vectors.
+    initializer : Optional[Callable[[torch.Tensor], None]]
+        The initializer function for the embedding weights.
+        If None, the weights are initialized using a normal
+        distribution with mean 0.0 and standard deviation 0.05.
+    combiner : Optional[str]
+        The combiner operation used to aggregate bag of embeddings.
+        Possible options are "mean", "sum", and "sqrtn".
+        By default "mean".
+    name : Optional[str]
+        The name of the lookup table.
+        By default None.
+    """
+
     def __init__(
         self,
         vocabulary_size: int,
@@ -450,6 +481,23 @@ class TableConfig:
 
 
 class FeatureConfig:
+    """
+    Class to set the embeddings table of a categorical feature
+    with a maximum sequence length.
+
+    Attributes
+    ----------
+    table : TableConfig
+        Configuration for the lookup table,
+        which is used for embedding lookup and aggregation.
+    max_sequence_length : int, optional
+        Maximum sequence length for sequence features.
+        By default 0.
+    name : str, optional
+        The feature name.
+        By default None
+    """
+
     def __init__(
         self, table: TableConfig, max_sequence_length: int = 0, name: Optional[Text] = None
     ):
