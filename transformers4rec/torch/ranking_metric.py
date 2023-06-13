@@ -42,6 +42,9 @@ class RankingMetric(tm.Metric):
     def __init__(self, top_ks=None, labels_onehot=False):
         super(RankingMetric, self).__init__()
         self.top_ks = top_ks or [2, 5]
+        if not isinstance(self.top_ks, (list, tuple)):
+            self.top_ks = [self.top_ks]
+
         self.labels_onehot = labels_onehot
         # Store the mean of the batch metrics (for each cut-off at topk)
         self.add_state("metric_mean", default=[], dist_reduce_fx="cat")
@@ -50,7 +53,9 @@ class RankingMetric(tm.Metric):
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
             target = torch_utils.tranform_label_to_onehot(target, preds.size(-1))
-        metric = self._metric(self.top_ks, preds.view(-1, preds.size(-1)), target)
+        metric = self._metric(
+            self.top_ks, preds.view(-1, preds.size(-1)), target.view(-1, target.size(-1))
+        )
         self.metric_mean.append(metric)  # type: ignore
 
     def compute(self):
@@ -126,17 +131,17 @@ class RecallAt(RankingMetric):
 
         # Compute recalls at K
         num_relevant = torch.sum(labels, dim=-1)
-        rel_indices = (num_relevant != 0).nonzero()
-        rel_count = num_relevant[rel_indices].squeeze()
+        rel_indices = (num_relevant != 0).nonzero().squeeze()
+        rel_count = num_relevant[rel_indices]
 
         if rel_indices.shape[0] > 0:
             for index, k in enumerate(ks):
-                rel_labels = topk_labels[rel_indices, : int(k)].squeeze()
+                rel_labels = topk_labels[rel_indices, : int(k)]
 
-                recalls[rel_indices, index] = (
-                    torch.div(torch.sum(rel_labels, dim=-1), rel_count)
-                    .reshape(len(rel_indices), 1)
-                    .to(dtype=torch.float32)
+                recalls[rel_indices, index] = torch.div(
+                    torch.sum(rel_labels, dim=-1), rel_count
+                ).to(
+                    dtype=torch.float32
                 )  # Ensuring type is double, because it can be float if --fp16
 
         return recalls
