@@ -24,6 +24,7 @@ from merlin.schema import Schema
 import transformers4rec.torch as tr
 from transformers4rec.config import trainer
 from transformers4rec.config import transformer as tconf
+from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
@@ -328,6 +329,20 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
             ],
         ),
         (
+            tr.NextItemPredictionTask(
+                weight_tying=False,
+                metrics=(
+                    NDCGAt(top_ks=[5, 10], labels_onehot=True),
+                    RecallAt(top_ks=[10], labels_onehot=True),
+                ),
+            ),
+            [
+                "eval_/next-item/ndcg_at_5",
+                "eval_/next-item/ndcg_at_10",
+                "eval_/next-item/recall_at_10",
+            ],
+        ),
+        (
             tr.BinaryClassificationTask("click", summary_type="mean"),
             [
                 "eval_/click/binary_classification_task/binary_accuracy",
@@ -347,7 +362,7 @@ def test_trainer_music_streaming(task_and_metrics):
     data = tr.data.music_streaming_testing_data
     schema = data.schema
     batch_size = 16
-    task, default_metric = task_and_metrics
+    task, expected_metrics = task_and_metrics
 
     inputs = tr.TabularSequenceFeatures.from_schema(
         schema,
@@ -388,7 +403,7 @@ def test_trainer_music_streaming(task_and_metrics):
     predictions = recsys_trainer.predict(data.path)
 
     assert isinstance(eval_metrics, dict)
-    assert set(default_metric).issubset(set(eval_metrics.keys()))
+    assert set(expected_metrics).issubset(set(eval_metrics.keys()))
     assert eval_metrics["eval_/loss"] is not None
 
     assert predictions is not None
