@@ -409,7 +409,9 @@ def test_trainer_music_streaming(task_and_metrics):
     assert predictions is not None
     # 1000 is the total samples in the testing data
     if isinstance(task, tr.NextItemPredictionTask):
-        assert predictions.predictions.shape == (1000, task.target_dim)
+        top_predicted_item_ids, top_prediction_scores = predictions.predictions
+        assert top_predicted_item_ids.shape == (1000, DEFAULT_PREDICT_TOP_K)
+        assert top_prediction_scores.shape == (1000, DEFAULT_PREDICT_TOP_K)
     else:
         assert predictions.predictions.shape == (1000,)
 
@@ -450,6 +452,8 @@ def test_trainer_music_streaming_core_schema(task_and_metrics):
     schema = data.merlin_schema
     batch_size = 16
     task, default_metric = task_and_metrics
+
+    DEFAULT_PREDICT_TOP_K = 100
 
     inputs = tr.TabularSequenceFeatures.from_schema(
         schema,
