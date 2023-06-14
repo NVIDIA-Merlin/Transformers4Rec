@@ -486,7 +486,8 @@ class NextItemPredictionTask(PredictionTask):
         predictions = self.forward_to_prediction_fn(predictions)
 
         for metric in self.metrics:
-            outputs[self.metric_name(metric)] = metric(predictions, targets)
+            result = metric(predictions, targets)
+            outputs[self.metric_name(metric)] = result
 
         return outputs
 
@@ -502,6 +503,10 @@ class NextItemPredictionTask(PredictionTask):
         topks = {self.metric_name(metric): metric.top_ks for metric in self.metrics}
         results = {}
         for name, metric in metrics.items():
+            # Fix for when using a single cut-off, as torch metrics convert results to scalar
+            # when a single element vector is returned
+            if len(metric.size()) == 0:
+                metric = metric.unsqueeze(0)
             for measure, k in zip(metric, topks[name]):
                 results[f"{name}_{k}"] = measure
         return results
