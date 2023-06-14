@@ -407,6 +407,9 @@ def test_trainer_music_streaming(task_and_metrics):
     assert eval_metrics["eval_/loss"] is not None
 
     assert predictions is not None
+
+    DEFAULT_PREDICT_TOP_K = 100
+
     # 1000 is the total samples in the testing data
     if isinstance(task, tr.NextItemPredictionTask):
         top_predicted_item_ids, top_prediction_scores = predictions.predictions
@@ -452,8 +455,6 @@ def test_trainer_music_streaming_core_schema(task_and_metrics):
     schema = data.merlin_schema
     batch_size = 16
     task, default_metric = task_and_metrics
-
-    DEFAULT_PREDICT_TOP_K = 100
 
     inputs = tr.TabularSequenceFeatures.from_schema(
         schema,
