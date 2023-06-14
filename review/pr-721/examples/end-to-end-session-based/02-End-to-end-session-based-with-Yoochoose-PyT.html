@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>End-to-end session-based recommendations with PyTorch &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.html" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Tutorial: End-to-end Session-based Recommendation" href="../tutorial/index.html" />
+    <link rel="prev" title="ETL with NVTabular" href="01-ETL-with-NVTabular.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">End-to-end session-based recommendation</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="01-ETL-with-NVTabular.html">ETL with NVTabular</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">End-to-end session-based recommendations with PyTorch</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Transformers4Rec Example Notebooks</a> &raquo;</li>
+          <li><a href="index.html">End-to-end session-based recommendation</a> &raquo;</li>
+      <li>End-to-end session-based recommendations with PyTorch</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2022 NVIDIA Corporation. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ==============================================================================</span>
+
+<span class="c1"># Each user is responsible for checking the content of datasets and the</span>
+<span class="c1"># applicable licenses and determining if suitable for the intended use.</span>
+</pre></div>
+</div>
+</div>
+</div>
+<img alt="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-02-end-to-end-session-based-with-yoochoose-pyt/nvidia_logo.png" src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-02-end-to-end-session-based-with-yoochoose-pyt/nvidia_logo.png" />
+<div class="tex2jax_ignore mathjax_ignore section" id="end-to-end-session-based-recommendations-with-pytorch">
+<h1>End-to-end session-based recommendations with PyTorch<a class="headerlink" href="#end-to-end-session-based-recommendations-with-pytorch" title="Permalink to this headline"></a></h1>
+<p>In recent years, several deep learning-based algorithms have been proposed for recommendation systems while its adoption in industry deployments have been steeply growing. In particular, NLP inspired approaches have been successfully adapted for sequential and session-based recommendation problems, which are important for many domains like e-commerce, news and streaming media. Session-Based Recommender Systems (SBRS) have been proposed to model the sequence of interactions within the current user session, where a session is a short sequence of user interactions typically bounded by user inactivity. They have recently gained popularity due to their ability to capture short-term or contextual user preferences towards items.</p>
+<p>The field of NLP has evolved significantly within the last decade, particularly due to the increased usage of deep learning. As a result, state of the art NLP approaches have inspired RecSys practitioners and researchers to adapt those architectures, especially for sequential and session-based recommendation problems. Here, we leverage one of the state-of-the-art Transformer-based architecture, <a class="reference external" href="https://arxiv.org/abs/1906.08237">XLNet</a> with Masked Language Modeling (MLM) training technique (see our <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/stable/examples/tutorial">tutorial</a> for details) for training a session-based model.</p>
+<p>In this end-to-end-session-based recommnender model example, we use <code class="docutils literal notranslate"><span class="pre">Transformers4Rec</span></code> library, which leverages the popular <a class="reference external" href="https://github.com/huggingface/transformers">HuggingFace’s Transformers</a> NLP library and make it possible to experiment with cutting-edge implementation of such architectures for sequential and session-based recommendation problems. For detailed explanations of the building blocks of Transformers4Rec meta-architecture visit <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/stable/examples/getting-started-session-based">getting-started-session-based</a> and <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/stable/examples/tutorial">tutorial</a> example notebooks.</p>
+<div class="section" id="model-definition-using-transformers4rec">
+<h2>1. Model definition using Transformers4Rec<a class="headerlink" href="#model-definition-using-transformers4rec" title="Permalink to this headline"></a></h2>
+<p>In the previous notebook, we have created sequential features and saved our processed data frames as parquet files. Now we use these processed parquet files to train a session-based recommendation model with the XLNet architecture.</p>
+<div class="section" id="get-the-schema">
+<h3>1.1 Get the schema<a class="headerlink" href="#get-the-schema" title="Permalink to this headline"></a></h3>
+<p>The library uses a schema format to configure the input features and automatically creates the necessary layers. This <em>protobuf</em> text file contains the description of each input feature by defining: the name, the type, the number of elements of a list column,  the cardinality of a categorical feature and the min and max values of each feature. In addition, the annotation field contains the tags such as specifying the <code class="docutils literal notranslate"><span class="pre">continuous</span></code> and <code class="docutils literal notranslate"><span class="pre">categorical</span></code> features, the <code class="docutils literal notranslate"><span class="pre">target</span></code> column or the <code class="docutils literal notranslate"><span class="pre">item_id</span></code> feature, among others.</p>
+<p>We create the schema object by reading the processed train parquet file generated by NVTabular pipeline in the previous, 01-ETL-with-NVTabular, notebook.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data&quot;</span><span class="p">)</span>
+<span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/preproc_sessions_by_day&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="n">train</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;processed_nvt/part_0.parquet&quot;</span><span class="p">))</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">schema</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can select the subset of features we want to use for training the model by their tags or their names.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span>
+   <span class="p">[</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">,</span> <span class="s1">&#39;category-list&#39;</span><span class="p">,</span> <span class="s1">&#39;product_recency_days_log_norm-list&#39;</span><span class="p">,</span> <span class="s1">&#39;et_dayofweek_sin-list&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can print out the schema.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>tags</th>
+      <th>dtype</th>
+      <th>is_list</th>
+      <th>is_ragged</th>
+      <th>properties.num_buckets</th>
+      <th>properties.freq_threshold</th>
+      <th>properties.max_size</th>
+      <th>properties.start_index</th>
+      <th>properties.cat_path</th>
+      <th>properties.embedding_sizes.cardinality</th>
+      <th>properties.embedding_sizes.dimension</th>
+      <th>properties.domain.min</th>
+      <th>properties.domain.max</th>
+      <th>properties.domain.name</th>
+      <th>properties.value_count.min</th>
+      <th>properties.value_count.max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>item_id-list</td>
+      <td>(Tags.ITEM_ID, Tags.CATEGORICAL, Tags.ID, Tags...</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.item_id.parquet</td>
+      <td>52741.0</td>
+      <td>512.0</td>
+      <td>0.0</td>
+      <td>52740.0</td>
+      <td>item_id</td>
+      <td>0</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>category-list</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.category.parquet</td>
+      <td>336.0</td>
+      <td>42.0</td>
+      <td>0.0</td>
+      <td>335.0</td>
+      <td>category</td>
+      <td>0</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>product_recency_days_log_norm-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>et_dayofweek_sin-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0</td>
+      <td>20</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</div>
+<div class="section" id="define-the-end-to-end-session-based-transformer-based-recommendation-model">
+<h3>1.2 Define the end-to-end Session-based Transformer-based recommendation model<a class="headerlink" href="#define-the-end-to-end-session-based-transformer-based-recommendation-model" title="Permalink to this headline"></a></h3>
+<p>For defining a session-based recommendation model, the end-to-end model definition requires four steps:</p>
+<ol class="simple">
+<li><p>Instantiate <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.tf.features.html?highlight=tabularsequence#transformers4rec.tf.features.sequence.TabularSequenceFeatures">TabularSequenceFeatures</a> input-module from schema to prepare the embedding tables of categorical variables and project continuous features, if specified. In addition, the module provides different aggregation methods (e.g. ‘concat’, ‘elementwise-sum’) to merge input features and generate the sequence of interactions embeddings. The module also supports language modeling tasks to prepare masked labels for training and evaluation (e.g: ‘mlm’ for masked language modeling)</p></li>
+<li><p>Next, we need to define one or multiple prediction tasks. For this demo, we are going to use <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.tf.model.html?highlight=nextitem#transformers4rec.tf.model.prediction_task.NextItemPredictionTask">NextItemPredictionTask</a> with <code class="docutils literal notranslate"><span class="pre">Masked</span> <span class="pre">Language</span> <span class="pre">modeling</span></code>: during training, randomly selected items are masked and predicted using the unmasked sequence items. For inference, it is meant to always predict the next item to be interacted with.</p></li>
+<li><p>Then we construct a <code class="docutils literal notranslate"><span class="pre">transformer_config</span></code> based on the architectures provided by <a class="reference external" href="https://github.com/huggingface/transformers">Hugging Face Transformers</a> framework. </a></p></li>
+<li><p>Finally we link the transformer-body to the inputs and the prediction tasks to get the final pytorch <code class="docutils literal notranslate"><span class="pre">Model</span></code> class.</p></li>
+</ol>
+<p>For more details about the features supported by each sub-module, please check out the library <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/">documentation</a> page.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">tr</span>
+
+<span class="n">max_sequence_length</span><span class="p">,</span> <span class="n">d_model</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">320</span>
+<span class="c1"># Define input module to process tabular input-features and to prepare masked inputs</span>
+<span class="n">input_module</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+    <span class="n">schema</span><span class="p">,</span>
+    <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
+    <span class="n">continuous_projection</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;concat&quot;</span><span class="p">,</span>
+    <span class="n">d_output</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+    <span class="n">masking</span><span class="o">=</span><span class="s2">&quot;mlm&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Define Next item prediction-task </span>
+<span class="n">prediction_task</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Define the config of the XLNet Transformer architecture</span>
+<span class="n">transformer_config</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span> <span class="n">n_head</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">n_layer</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">total_seq_length</span><span class="o">=</span><span class="n">max_sequence_length</span>
+<span class="p">)</span>
+
+<span class="c1"># Get the end-to-end model </span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">transformer_config</span><span class="o">.</span><span class="n">to_torch_model</span><span class="p">(</span><span class="n">input_module</span><span class="p">,</span> <span class="n">prediction_task</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;320&#39; to be equal to the item-id embedding dimension &#39;64&#39;
+</pre></div>
+</div>
+</div>
+</div>
+<p>You can print out the model structure by uncommenting the line below.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#model</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="daily-fine-tuning-training-over-a-time-window">
+<h3>1.3. Daily Fine-Tuning: Training over a time window¶<a class="headerlink" href="#daily-fine-tuning-training-over-a-time-window" title="Permalink to this headline"></a></h3>
+<p>Now that the model is defined, we are going to launch training. For that, Transfromers4rec extends HF Transformers Trainer class to adapt the evaluation loop for session-based recommendation task and the calculation of ranking metrics. The original <code class="docutils literal notranslate"><span class="pre">train()</span></code> method is not modified meaning that we leverage the efficient training implementation from that library, which manages, for example, half-precision (FP16) training.</p>
+<div class="section" id="set-the-training-arguments">
+<h4>Set the training arguments<a class="headerlink" href="#set-the-training-arguments" title="Permalink to this headline"></a></h4>
+<p>An additional argument <code class="docutils literal notranslate"><span class="pre">data_loader_engine</span></code> is defined to automatically load the features needed for training using the schema. The default value is <code class="docutils literal notranslate"><span class="pre">merlin</span></code> for optimized GPU-based data-loading.  Optionally a <code class="docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> (<code class="docutils literal notranslate"><span class="pre">pyarrow</span></code>) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_args</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">T4RecTrainingArguments</span><span class="p">(</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./tmp&quot;</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+            <span class="n">data_loader_engine</span><span class="o">=</span><span class="s1">&#39;merlin&#39;</span><span class="p">,</span>
+            <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+            <span class="n">dataloader_drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">per_device_train_batch_size</span> <span class="o">=</span> <span class="mi">384</span><span class="p">,</span>
+            <span class="n">per_device_eval_batch_size</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+            <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span>
+            <span class="n">fp16</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">report_to</span> <span class="o">=</span> <span class="p">[],</span>
+            <span class="n">logging_steps</span><span class="o">=</span><span class="mi">200</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="instantiate-the-trainer">
+<h4>Instantiate the trainer<a class="headerlink" href="#instantiate-the-trainer" title="Permalink to this headline"></a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">recsys_trainer</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Trainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">args</span><span class="o">=</span><span class="n">training_args</span><span class="p">,</span>
+    <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+    <span class="n">compute_metrics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Using amp fp16 backend
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="launch-daily-training-and-evaluation">
+<h4>Launch daily training and evaluation<a class="headerlink" href="#launch-daily-training-and-evaluation" title="Permalink to this headline"></a></h4>
+<p>In this demo, we will use the <code class="docutils literal notranslate"><span class="pre">fit_and_evaluate</span></code> method that allows us to conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use the training data of a specific time index <span class="math notranslate nohighlight">\(t\)</span> to train the model; then we evaluate on the validation data of the next index <span class="math notranslate nohighlight">\(t + 1\)</span>. Particularly, we set start time to 178 and end time to 180.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">fit_and_evaluate</span>
+<span class="n">OT_results</span> <span class="o">=</span> <span class="n">fit_and_evaluate</span><span class="p">(</span><span class="n">recsys_trainer</span><span class="p">,</span> <span class="n">start_time_index</span><span class="o">=</span><span class="mi">178</span><span class="p">,</span> <span class="n">end_time_index</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">input_dir</span><span class="o">=</span><span class="n">OUTPUT_DIR</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 28800
+  Num Epochs = 10
+  Instantaneous batch size per device = 384
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
+  Gradient Accumulation steps = 1
+  Total optimization steps = 750
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Launch training for day 178: *****
+</pre></div>
+</div>
+<div class="output text_html">
+    <div>
+
+      <progress value='750' max='750' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [750/750 00:20, Epoch 10/10]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>200</td>
+      <td>7.681100</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.656800</td>
+    </tr>
+    <tr>
+      <td>600</td>
+      <td>6.372000</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
+Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+</pre></div>
+</div>
+<div class="output text_html">
+<div>
+
+  <progress value='14' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
+  [6/6 00:27]
+</div>
+</div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 20736
+  Num Epochs = 10
+  Instantaneous batch size per device = 384
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
+  Gradient Accumulation steps = 1
+  Total optimization steps = 540
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 179:*****
+
+ eval_/next-item/avg_precision@10 = 0.08119537681341171
+ eval_/next-item/avg_precision@20 = 0.0857219472527504
+ eval_/next-item/ndcg@10 = 0.11199340969324112
+ eval_/next-item/ndcg@20 = 0.12857995927333832
+ eval_/next-item/recall@10 = 0.20809248089790344
+ eval_/next-item/recall@20 = 0.27398842573165894
+
+***** Launch training for day 179: *****
+</pre></div>
+</div>
+<div class="output text_html">
+    <div>
+
+      <progress value='540' max='540' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [540/540 00:14, Epoch 10/10]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>200</td>
+      <td>6.805900</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.250300</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
+Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+***** Running training *****
+  Num examples = 16896
+  Num Epochs = 10
+  Instantaneous batch size per device = 384
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
+  Gradient Accumulation steps = 1
+  Total optimization steps = 440
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 180:*****
+
+ eval_/next-item/avg_precision@10 = 0.06664632260799408
+ eval_/next-item/avg_precision@20 = 0.07125943899154663
+ eval_/next-item/ndcg@10 = 0.09318044036626816
+ eval_/next-item/ndcg@20 = 0.110211081802845
+ eval_/next-item/recall@10 = 0.17855477333068848
+ eval_/next-item/recall@20 = 0.24568764865398407
+
+***** Launch training for day 180: *****
+</pre></div>
+</div>
+<div class="output text_html">
+    <div>
+
+      <progress value='440' max='440' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [440/440 00:12, Epoch 10/10]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>200</td>
+      <td>6.608300</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.030500</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 181:*****
+
+ eval_/next-item/avg_precision@10 = 0.13680869340896606
+ eval_/next-item/avg_precision@20 = 0.14374792575836182
+ eval_/next-item/ndcg@10 = 0.18158714473247528
+ eval_/next-item/ndcg@20 = 0.2070869356393814
+ eval_/next-item/recall@10 = 0.3181818127632141
+ eval_/next-item/recall@20 = 0.4202226400375366
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="visualize-the-average-of-metrics-over-time">
+<h4>Visualize the average of metrics over time<a class="headerlink" href="#visualize-the-average-of-metrics-over-time" title="Permalink to this headline"></a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">OT_results</span></code> is a list of scores (accuracy metrics) for evaluation based on given start and end time_index. Since in this example we do evaluation on days 179, 180 and 181, we get three metrics in the list one for each day.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">OT_results</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.08119537681341171,
+  0.06664632260799408,
+  0.13680869340896606],
+ &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.0857219472527504,
+  0.07125943899154663,
+  0.14374792575836182],
+ &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11199340969324112,
+  0.09318044036626816,
+  0.18158714473247528],
+ &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.12857995927333832,
+  0.110211081802845,
+  0.2070869356393814],
+ &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.20809248089790344,
+  0.17855477333068848,
+  0.3181818127632141],
+ &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.27398842573165894,
+  0.24568764865398407,
+  0.4202226400375366]}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1"># take the average of metric values over time</span>
+<span class="n">avg_results</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">OT_results</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">avg_results</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; </span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">avg_results</span><span class="p">[</span><span class="n">key</span><span class="p">])))</span> 
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09488346427679062
+ indexed_by_time_eval_/next-item/avg_precision@20 = 0.10024310400088628
+ indexed_by_time_eval_/next-item/ndcg@10 = 0.12892033159732819
+ indexed_by_time_eval_/next-item/ndcg@20 = 0.14862599223852158
+ indexed_by_time_eval_/next-item/recall@10 = 0.23494302233060202
+ indexed_by_time_eval_/next-item/recall@20 = 0.3132995714743932
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="trace-the-model">
+<h4>Trace the model<a class="headerlink" href="#trace-the-model" title="Permalink to this headline"></a></h4>
+<p>We serve the model with the PyTorch backend that is used to execute TorchScript models. All models created in PyTorch using the python API must be traced/scripted to produce a TorchScript model. For tracing the model, we use <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.trace.html">torch.jit.trace</a> api that takes the model as a Python function or torch.nn.Module, and an example input  that will be passed to the function while tracing.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">cudf</span>
+<span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">nvtabular</span> <span class="kn">import</span> <span class="n">Workflow</span>
+
+<span class="kn">from</span> <span class="nn">merlin.systems.dag</span> <span class="kn">import</span> <span class="n">Ensemble</span>
+<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.pytorch</span> <span class="kn">import</span> <span class="n">PredictPyTorch</span>
+<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.workflow</span> <span class="kn">import</span> <span class="n">TransformWorkflow</span>
+<span class="kn">from</span> <span class="nn">merlin.table</span> <span class="kn">import</span> <span class="n">TensorTable</span><span class="p">,</span> <span class="n">TorchColumn</span>
+<span class="kn">from</span> <span class="nn">merlin.table.conversions</span> <span class="kn">import</span> <span class="n">convert_col</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Create a dict of tensors to feed it as example inputs in the <code class="docutils literal notranslate"><span class="pre">torch.jit.trace()</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;./preproc_sessions_by_day/178/train.parquet&quot;</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">TensorTable</span><span class="o">.</span><span class="n">from_df</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">100</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_col</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">],</span> <span class="n">TorchColumn</span><span class="p">)</span>
+<span class="n">model_input_dict</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s now add a top_k parameter to model so that we can return the top k item ids with the highest scores when we serve the model on Triton Inference Server.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">top_k</span> <span class="o">=</span> <span class="mi">20</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let us now trace the model.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">model_input_dict</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s check out the <code class="docutils literal notranslate"><span class="pre">item_id-list</span></code> column in the <code class="docutils literal notranslate"><span class="pre">model_input_dict</span></code> dictionary.</p>
+<p>The column is represented as values and offsets dictating which values belong to which example.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_input_dict</span><span class="p">[</span><span class="s1">&#39;item_id-list__values&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([  604,   878,   742,    90,  4777,  1583,  3446,  8083,  3446,  4018,
+          742,  4777,   184, 12288,  2065,   430,     6,    30,     6,   157,
+         1987,  2590, 10855,  8217,  4210,  8711,  4242,    81,   112,  4242,
+         5732,  6810,    33,     6,    73,   664,  2312,  7124,  9113,   445,
+         1157,   774,   685,   430,  1945,   475,   597,   289,   166,    29,
+          342,   289,    33,   423,   166,   480,  2772,   288,   962,  4001,
+         2050,  3274,   499,  1219,   395,  1636, 11839, 10714, 11107,   289,
+          166,   650,  1085,   302,    88,   650,   214,   304,   177,   317,
+          423,     6,  3818,   931,  2186,  1085,   206,   687,  3831,   687,
+          202,    20,    43,    20,  2034, 10457,    20,    21,  1126,  2815,
+         4210, 34264,   830,   774,   620,  2050,  1987,  1079,  4713,  1336,
+          661,   289,   430,   863,  4829,  5786, 19156, 17270, 23365,  4209,
+         3651,  1037,  4770,   224,   277,  1020,   650,   166,  1354,   206,
+         1889,  2473,  1697,   997,   480,   774,  3841,  4316,  3841,  1230,
+         3841,  1697,  3809,   475,   981,   804,   313,   613,  1219,  1334,
+         1941,  2888,  2626,  1334,  2689,   804,   475,   981,   313,   804,
+         1219,   206,   651,   429,   605,   101,   413,  1965,   627,   814,
+          627,   814,  4713,  3675,  2789,  3769,  1283,  9540,  1251,   313,
+          685,  2497,   395,   845,  3462,  2713,  5077,   388,   340,   297,
+          388,  9641,    46,    61,   822,    61,   602,  2270,   719,  3274,
+         2556,     2,    61,    24,    96,    61,   423,    61,   475,  3460,
+         2693,  3460,  3044,  2556,  3988,   992,  1603,   122,  2704,  2787,
+         3135,   550,   516,    44,  1551,  2702,   206,  1762,    31,   474,
+          481,   198,   474,  2704,  2393,  1025, 20033,    72,  1334,   224,
+         3460,  4774,  2050,  6485, 15953,   422,  1488,  2346,  4470,  2548,
+          571,  1770,  1324,   453,   837,   123,   638,  4759,  3552,  6825,
+         2740,  5347,  5390,  1169,  4100,  1230,   804,  3588,  2449,   185,
+           16,   643,   274,   686, 18092, 10457,   609,  2969,  3480,  2969,
+           37,   609,  2969,   609,    22,  8312,   257,    37,    22,  5361,
+         7186,  7380,  6052,  7256, 13404,   557,   160,  1664,  4375,  3484,
+          685,   651,   445,   429,   445,   774,   651,  4284,  1738,  3855,
+          225,   210,  7245,  6731,   771,  1987,   157,   804,   442,   804,
+         2091,  1169,  2091,  1169,  3484,  4375,  3484,   445,   429,   430,
+          423,  1697,  1393,  1798,  2753,   206,  1153, 21588,  2189,  3704,
+         4463,  5816,  7557,   507,  1797,   814,   627,  2016,   855,  1889,
+          224,   597,    37,   597, 16533, 10255,     2,  2651,  4028,  2556,
+         2788,  6379,  1830,  1070,    30,   312,   445,  1085,  1569,  2222,
+         2664,  1950,  2098,  1672,   224,  4336,   651,   997,  1157,   830,
+          800,   597,  1085, 12430,   415, 12430,   651,   800,  1756,  1378,
+         1413,   633,  2034,  7932,  6034,  6360,  4662,   576,  4662,   576,
+         4662], device=&#39;cuda:0&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<p>And here are the offsets</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_input_dict</span><span class="p">[</span><span class="s1">&#39;item_id-list__offsets&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([  0,  12,  14,  16,  19,  21,  23,  26,  32,  35,  45,  47,  49,  51,
+         56,  59,  61,  66,  69,  72,  76,  78,  80,  83,  87,  91,  94,  96,
+         98, 100, 102, 104, 107, 111, 113, 122, 124, 128, 130, 133, 136, 141,
+        143, 161, 164, 167, 172, 176, 180, 182, 184, 191, 193, 196, 199, 201,
+        209, 214, 234, 237, 243, 245, 265, 267, 274, 276, 281, 289, 295, 298,
+        300, 305, 307, 312, 314, 317, 320, 324, 327, 331, 335, 337, 339, 343,
+        345, 348, 351, 354, 356, 360, 362, 364, 367, 374, 376, 381, 383, 386,
+        388, 396, 401], device=&#39;cuda:0&#39;, dtype=torch.int32)
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s create a folder that we can store the exported models and the config files.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">shutil</span>
+<span class="n">ens_model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ens_model_path&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/models&quot;</span><span class="p">)</span>
+<span class="c1"># Make sure we have a clean stats space for Dask</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">):</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span> <span class="o">=</span> <span class="n">Workflow</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;workflow_etl&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">torch_op</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span> <span class="o">&gt;&gt;</span> <span class="n">TransformWorkflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">PredictPyTorch</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+</pre></div>
+</div>
+</div>
+</div>
+<p>The last step is to create the ensemble artifacts that Triton Inference Server can consume. To make these artifacts, we import the Ensemble class. The class is responsible for interpreting the graph and exporting the correct files for the server.</p>
+<p>When we create an <code class="docutils literal notranslate"><span class="pre">Ensemble</span></code> object we supply the graph and a schema representing the starting input of the graph. The inputs to the ensemble graph are the inputs to the first operator of out graph. After we created the Ensemble we export the graph, supplying an export path for the <code class="docutils literal notranslate"><span class="pre">ensemble.export</span></code> function. This returns an ensemble config which represents the entire inference pipeline and a list of node-specific configs.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ensemble</span> <span class="o">=</span> <span class="n">Ensemble</span><span class="p">(</span><span class="n">torch_op</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">)</span>
+<span class="n">ens_config</span><span class="p">,</span> <span class="n">node_configs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;session_id&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;item_id-count&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;day_index&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="serving-ensemble-model-to-the-triton-inference-server">
+<h2>2. Serving Ensemble Model to the Triton Inference Server<a class="headerlink" href="#serving-ensemble-model-to-the-triton-inference-server" title="Permalink to this headline"></a></h2>
+<p>NVIDIA <a class="reference external" href="https://github.com/triton-inference-server/server">Triton Inference Server (TIS)</a> simplifies the deployment of AI models at scale in production. TIS provides a cloud and edge inferencing solution optimized for both CPUs and GPUs. It supports a number of different machine learning frameworks such as TensorFlow and PyTorch.</p>
+<p>The last step of a machine learning (ML)/deep learning (DL) pipeline is to deploy the ETL workflow and saved model to production. In the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the DL model for a prediction. Therefore, we deploy the NVTabular workflow with the PyTorch model as an ensemble model to Triton Inference. The ensemble model guarantees that the same transformation is applied to the raw inputs.</p>
+<p>In this section, you will learn how to</p>
+<ul class="simple">
+<li><p>to deploy saved NVTabular and PyTorch models to Triton Inference Server</p></li>
+<li><p>send requests for predictions and get responses.</p></li>
+</ul>
+<div class="section" id="starting-triton-server">
+<h3>2.1 Starting Triton Server<a class="headerlink" href="#starting-triton-server" title="Permalink to this headline"></a></h3>
+<p>It is time to deploy all the models as an ensemble model to Triton Inference Serve TIS. After we export the ensemble, we are ready to start the TIS. You can start triton server by using the following command on your terminal:</p>
+<p><code class="docutils literal notranslate"><span class="pre">tritonserver</span> <span class="pre">--model-repository=&lt;ensemble_export_path&gt;</span></code></p>
+<p>For the <code class="docutils literal notranslate"><span class="pre">--model-repository</span></code> argument, specify the same path as the export_path that you specified previously in the <code class="docutils literal notranslate"><span class="pre">ensemble.export</span></code> method. This command will launch the server and load all the models to the server. Once all the models are loaded successfully, you should see READY status printed out in the terminal for each loaded model.</p>
+</div>
+<div class="section" id="connect-to-the-triton-inference-server-and-check-if-the-server-is-alive">
+<h3>2.2. Connect to the Triton Inference Server and check if the server is alive<a class="headerlink" href="#connect-to-the-triton-inference-server-and-check-if-the-server-is-alive" title="Permalink to this headline"></a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tritonhttpclient</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">triton_client</span> <span class="o">=</span> <span class="n">tritonhttpclient</span><span class="o">.</span><span class="n">InferenceServerClient</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;localhost:8000&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;client created.&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;channel creation failed: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+<span class="n">triton_client</span><span class="o">.</span><span class="n">is_server_live</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>client created.
+GET /v2/health/live, headers None
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tritonhttpclient/__init__.py:31: DeprecationWarning: The package `tritonhttpclient` is deprecated and will be removed in a future version. Please use instead `tritonclient.http`
+  warnings.warn(
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="load-raw-data-for-inference">
+<h3>2.3. Load raw data for inference<a class="headerlink" href="#load-raw-data-for-inference" title="Permalink to this headline"></a></h3>
+<p>We select the last 50 interactions and filter out sessions with less than 2 interactions.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">interactions_merged_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;interactions_merged_df.parquet&quot;</span><span class="p">))</span>
+<span class="n">interactions_merged_df</span> <span class="o">=</span> <span class="n">interactions_merged_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;timestamp&#39;</span><span class="p">)</span>
+<span class="n">batch</span> <span class="o">=</span> <span class="n">interactions_merged_df</span><span class="p">[</span><span class="o">-</span><span class="mi">50</span><span class="p">:]</span>
+<span class="n">sessions_to_use</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<span class="n">filtered_batch</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">batch</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sessions_to_use</span><span class="p">[</span><span class="n">sessions_to_use</span><span class="o">.</span><span class="n">values</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="send-the-request-to-triton-server">
+<h3>2.5. Send the request to triton server<a class="headerlink" href="#send-the-request-to-triton-server" title="Permalink to this headline"></a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">get_model_repository_index</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/index, headers None
+
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;188&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;0_transformworkflowtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;1_predictpytorchtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;executor_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;0_transformworkflowtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;1_predictpytorchtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;executor_model&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
+</pre></div>
+</div>
+</div>
+</div>
+<p>If all models are loaded successfully, you should be seeing <code class="docutils literal notranslate"><span class="pre">READY</span></code> status next to each model.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;item_id_scores&#39;: array([[ 7.7149506,  7.3862066,  7.3664827,  7.2885814,  6.8977885,
+         6.853054 ,  6.6473446,  6.5615396,  6.5239835,  6.504697 ,
+         6.4961066,  6.482874 ,  6.478437 ,  6.4518657,  6.403399 ,
+         6.3845167,  6.372211 ,  6.3541226,  6.2738447,  6.2641015],
+       [ 7.8986144,  7.575227 ,  6.9020343,  6.8903823,  6.839163 ,
+         6.833202 ,  6.761392 ,  6.7598944,  6.6728435,  6.6523266,
+         6.640926 ,  6.6118965,  6.470592 ,  6.419156 ,  6.4112453,
+         6.4044685,  6.386283 ,  6.3791957,  6.362708 ,  6.32642  ],
+       [ 3.2538116,  3.1455884,  3.1179721,  3.0379417,  2.9422204,
+         2.9090347,  2.8573742,  2.8552375,  2.8385096,  2.8210163,
+         2.8062954,  2.7926047,  2.7883859,  2.7677355,  2.7579772,
+         2.7548594,  2.7234986,  2.7234783,  2.7092912,  2.7081766],
+       [ 7.1264834,  6.9747195,  6.686076 ,  6.55559  ,  6.554246 ,
+         6.4562297,  6.409179 ,  6.303057 ,  6.1918006,  6.18303  ,
+         6.1193542,  6.107653 ,  6.0896993,  6.0872216,  6.0593266,
+         6.0522294,  5.960239 ,  5.953763 ,  5.9512544,  5.93457  ],
+       [ 8.472156 ,  8.323568 ,  8.279997 ,  8.109349 ,  8.0277195,
+         7.8910418,  7.743165 ,  7.7279477,  7.692122 ,  7.6912303,
+         7.6711187,  7.5660324,  7.5545163,  7.524415 ,  7.4610972,
+         7.424488 ,  7.4123936,  7.411586 ,  7.3956637,  7.334862 ],
+       [10.485718 , 10.375805 , 10.131399 ,  9.950816 ,  9.917899 ,
+         9.840376 ,  9.77128  ,  9.676795 ,  9.599488 ,  9.544931 ,
+         9.512772 ,  9.488843 ,  9.455492 ,  9.438552 ,  9.430434 ,
+         9.37854  ,  9.362637 ,  9.329395 ,  9.303702 ,  9.279214 ],
+       [ 5.836771 ,  5.828289 ,  5.7385616,  5.6870475,  5.5709176,
+         5.5614986,  5.5448956,  5.3459535,  5.344148 ,  5.310749 ,
+         5.2611475,  5.2548814,  5.1640043,  5.1203575,  5.0081887,
+         4.987002 ,  4.976223 ,  4.90389  ,  4.8933997,  4.86463  ],
+       [ 8.174524 ,  7.422059 ,  7.3884916,  7.272735 ,  7.1977425,
+         7.0858173,  6.645329 ,  6.5097084,  6.470001 ,  6.453685 ,
+         6.2901287,  6.1282573,  6.1203957,  6.0265145,  6.0052614,
+         5.9081306,  5.880647 ,  5.78306  ,  5.7507606,  5.7427897],
+       [ 6.7380514,  6.735104 ,  6.6285214,  6.5611916,  6.527247 ,
+         6.4949493,  6.4821672,  6.474738 ,  6.4419727,  6.4345016,
+         6.3947067,  6.352811 ,  6.314824 ,  6.293556 ,  6.288764 ,
+         6.2727513,  6.2707367,  6.2422667,  6.2342215,  6.196748 ],
+       [ 5.6076183,  5.472957 ,  5.412912 ,  5.3116655,  5.177665 ,
+         5.112378 ,  5.085245 ,  4.9710717,  4.940496 ,  4.93859  ,
+         4.8099985,  4.760807 ,  4.7229834,  4.7145324,  4.707185 ,
+         4.667753 ,  4.6421194,  4.630641 ,  4.6156597,  4.5743294],
+       [ 8.147796 ,  7.6630974,  7.5877905,  7.4908724,  7.4732018,
+         7.404136 ,  7.352083 ,  7.3242574,  7.3009863,  7.242015 ,
+         7.1836567,  7.1416435,  7.138858 ,  7.134639 ,  7.111288 ,
+         7.0651016,  7.0538983,  7.0510435,  7.044665 ,  7.035279 ],
+       [ 3.2990756,  3.1885252,  3.1802373,  3.0592136,  3.045468 ,
+         3.0039759,  2.9578297,  2.9415162,  2.93026  ,  2.9297981,
+         2.8965662,  2.8944998,  2.877764 ,  2.8689   ,  2.8668582,
+         2.8634927,  2.78628  ,  2.767284 ,  2.7598662,  2.7465074],
+       [ 8.852634 ,  8.734692 ,  8.606397 ,  8.578839 ,  8.453225 ,
+         8.416724 ,  8.407235 ,  8.343583 ,  8.280216 ,  8.269384 ,
+         8.20807  ,  8.177954 ,  8.15201  ,  8.136789 ,  8.103194 ,
+         7.873078 ,  7.852006 ,  7.849255 ,  7.8436575,  7.7874575],
+       [ 8.121338 ,  7.9475265,  7.9030285,  7.8839293,  7.850343 ,
+         7.8212285,  7.7303505,  7.655741 ,  7.5204306,  7.4822707,
+         7.4198914,  7.3865814,  7.3747654,  7.3459187,  7.3127384,
+         7.2247725,  7.1183944,  7.111621 ,  7.0977235,  7.089139 ],
+       [ 8.760972 ,  8.427143 ,  8.166194 ,  8.004948 ,  7.831641 ,
+         7.8019366,  7.784935 ,  7.6579127,  7.5422807,  7.531015 ,
+         7.48702  ,  7.448603 ,  7.3950186,  7.355933 ,  7.3510966,
+         7.2111845,  7.183003 ,  7.166962 ,  7.1576095,  7.1405106]],
+      dtype=float32), &#39;item_ids&#39;: array([[  127,  1245,  1271,  4074,   161,   532,  3928, 19290, 11874,
+         1446,   346,  9285,  3452,  3334, 10987,   479,  7555,  3206,
+        14633, 13677],
+       [ 2693,  3460, 10401,  2393,  9415,  9285, 14213,  2404, 13750,
+        10987,  8084,   183,  2889,  5110, 16662, 10962,  7865, 14401,
+         4158,  3211],
+       [ 4278,  3225,  5889,   953,  7577,  1420,  4185,  4591,   573,
+        10287,  3514,  7923,  5623,  3269,   873,  2433, 15077,  5110,
+         6357,  3593],
+       [10401,   573,  3211,  2404,  3452,  2763,  4014,   786,  3296,
+         6030,  4380,  7481,  2067, 10962,   183,   809,  4651,  2806,
+         2575,  8084],
+       [10987,  9415,  9285,   479,  7998,  7555,  2475,  2404,  8084,
+         2693,  2661,  1102,   786, 14343,  3460,   161, 13677,  2889,
+         2393,  1600],
+       [ 8084, 13677, 14633, 12754, 14213,  3452, 13821,  2984, 11816,
+         2475,  1600,  4074, 13749,  9285, 17882, 10401, 10673,  1964,
+        11874,  9801],
+       [  224,  1453,  1889,   620,  2556,   520,   741,  1219,   633,
+         2050,  6344,  2651,  2852,  1039,  3841,   375,  2473,  3225,
+         4204,  2980],
+       [  620,   633,  1889,  1625,  1453,  1219,  4962,  6344,   224,
+         2034,  1413,  2980,   741,  1908,   597,  1085,  4770,  2305,
+         1647,  1334],
+       [  573, 14505,  3365,  9020,  5932,  7470,  7055,  6344, 10962,
+        11937,  6488, 13821, 19263, 14213,   633,  8553, 10123, 10401,
+         1453, 15439],
+       [15148, 13277,  1381, 24893, 11689, 37268,  7454,  1547,  2305,
+        30765, 46450, 18630,  8747,  1085,  1889, 25487,  7506,   620,
+        14220,  8291],
+       [19263, 13821, 15289, 11874,  8058, 17882,  7159, 12754,  6473,
+        14213, 16233,   573,  3452, 12059,  1600,  8084, 10401, 13749,
+        15439,  9801],
+       [ 8813,  1889,   464,  1855,   520,   127,   185,  4204,   637,
+           31,   784,  2789,  4713,  6461, 11874,   840,   177,  5224,
+         5818,  6473],
+       [ 7865,  5932,  7055, 14213,  9020,  4541,  8084,  6488,  8553,
+        14505,  6473, 10962,  4204,  4136, 16233, 13821, 10401,  9459,
+         9801, 15439],
+       [10401,  6488,  5932,  7865, 10962, 14213,  8553,  8084,  9020,
+          573,  4204, 13821,  3175, 15439,  4136, 10123, 11874,  3452,
+        17882,  9236],
+       [ 2693,  3460, 14213,  7865,  5932,  6488,  4204,  8084, 10962,
+         8553,  1219,  9020,  4541, 13750,  9236,  1453,  4136,  2980,
+        10401,  2651]])}
+</pre></div>
+</div>
+</div>
+</div>
+<p>The response contains scores (logits) for each of the returned items and the returned it ids.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>dict_keys([&#39;item_id_scores&#39;, &#39;item_ids&#39;])
+</pre></div>
+</div>
+</div>
+</div>
+<p>Just as we requested by setting the <code class="docutils literal notranslate"><span class="pre">top_k</span></code> parameter, only 20 predictions are returned.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;item_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(15, 20)
+</pre></div>
+</div>
+</div>
+</div>
+<p>This is the end of the tutorial. You successfully</p>
+<ul class="simple">
+<li><p>performed feature engineering with NVTabular</p></li>
+<li><p>trained transformer architecture based session-based recommendation models with Transformers4Rec</p></li>
+<li><p>deployed a trained model to Triton Inference Server, sent request and got responses from the server.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p>Merlin Transformers4rec: <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec">https://github.com/NVIDIA-Merlin/Transformers4Rec</a></p></li>
+<li><p>Merlin NVTabular: <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular/tree/stable/nvtabular">https://github.com/NVIDIA-Merlin/NVTabular/tree/stable/nvtabular</a></p></li>
+<li><p>Merlin Dataloader: <a class="reference external" href="https://github.com/NVIDIA-Merlin/dataloader">https://github.com/NVIDIA-Merlin/dataloader</a></p></li>
+<li><p>Triton inference server: <a class="reference external" href="https://github.com/triton-inference-server">https://github.com/triton-inference-server</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="01-ETL-with-NVTabular.html" class="btn btn-neutral float-left" title="ETL with NVTabular" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../tutorial/index.html" class="btn btn-neutral float-right" title="Tutorial: End-to-end Session-based Recommendation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
