@@ -641,7 +641,8 @@
                                 <span class="s2">&quot;The model.top_k is available to support inference (e.g. when &quot;</span>
                                 <span class="s2">&quot;serving with Triton Inference Server) to return only the top-k &quot;</span>
                                 <span class="s2">&quot;predicted items ids and their scores.&quot;</span>
-                                <span class="s2">&quot;When setting model.top_k, the model will also limit the number of &quot;</span>
+                                <span class="s2">&quot;When doing offline predictions with `trainer.predict(), &quot;</span>
+                                <span class="s2">&quot;if you set model.top_k, the model will also limit the number of &quot;</span>
                                 <span class="s2">&quot;predictions output from trainer.predict(). &quot;</span>
                                 <span class="s2">&quot;In that case, you want either to reduce args.predict_top_k or &quot;</span>
                                 <span class="s2">&quot;increase model.top_k, so that args.predict_top_k is &quot;</span>
