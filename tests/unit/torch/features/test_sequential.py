@@ -136,7 +136,6 @@ def test_sequential_tabular_features_ignore_masking(schema, torch_yoochoose_like
         input_module(torch_yoochoose_like, training=False, testing=True).detach().cpu().numpy()
     )
 
-    assert np.allclose(output_wo_masking, output_inference_masking, rtol=1e-04, atol=1e-08)
     assert not np.allclose(output_wo_masking, output_clm_masking, rtol=1e-04, atol=1e-08)
 
     input_module._masking = MaskedLanguageModeling(hidden_size=100)

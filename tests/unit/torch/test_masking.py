@@ -43,7 +43,7 @@ def test_mask_only_last_item_for_eval(torch_masking_inputs, task):
     lm = tr.masking.masking_registry[task](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
-    lm.compute_masked_targets(torch_masking_inputs["labels"], training=False)
+    lm.compute_masked_targets(torch_masking_inputs["labels"], training=False, testing=True)
     # get non padded last items
     non_padded_mask = torch_masking_inputs["labels"] != torch_masking_inputs["padding_idx"]
     rows_ids = torch.arange(
@@ -57,7 +57,7 @@ def test_mask_only_last_item_for_eval(torch_masking_inputs, task):
     trgt_pad = lm.masked_targets != torch_masking_inputs["padding_idx"]
     out_last = lm.masked_targets[trgt_pad].flatten().numpy()
     # check that only one item is masked for each session
-    assert lm.mask_schema.sum() == torch_masking_inputs["input_tensor"].size(0)
+    assert trgt_pad.sum() == torch_masking_inputs["input_tensor"].size(0)
     # check only the last non-paded item is masked
     assert all(last_labels == out_last)
 
@@ -109,7 +109,7 @@ def test_clm_training_on_last_item(torch_masking_inputs):
     # last labels from output
     trgt_pad = lm.masked_targets != torch_masking_inputs["padding_idx"]
     out_last = lm.masked_targets[trgt_pad].flatten().numpy()
-    assert lm.mask_schema.sum() == torch_masking_inputs["input_tensor"].size(0)
+    assert trgt_pad.sum() == torch_masking_inputs["input_tensor"].size(0)
     assert all(last_labels == out_last)
 
 
