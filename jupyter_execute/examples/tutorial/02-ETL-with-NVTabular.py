@@ -103,7 +103,7 @@ INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
 # - we categorified the `user_session` column, so that it now has only integer values.
 # - we removed consequetively repeated (user, item) interactions. For example, an original session with `[1, 2, 4, 1, 2, 2, 3, 3, 3]` product interactions has become `[1, 2, 4, 1, 2, 3]` after removing the repeated interactions on the same item within the same session.
 
-# Below, we start by reading in `Oct-2019.parquet`with cuDF. In order to create and save `Oct-2019.parquet` file, please run [01-preprocess.ipynb](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/tutorial) notebook first.
+# Below, we start by reading in `Oct-2019.parquet`with cuDF. In order to create and save `Oct-2019.parquet` file, please run [01-preprocess.ipynb](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/examples/tutorial/01-preprocess.ipynb) notebook first.
 
 # In[5]:
 
@@ -125,7 +125,7 @@ df.shape
 df.isnull().any()
 
 
-# We see that `'category_code'` and `'brand'` columns have null values, and in the following cell we are going to fill these nulls with via categorify op, and then all categorical columns will be encoded to continuous integers. Note that we add `start_index=1` in the `Categorify op` for the categorical columns, the reason for that we want the encoded null values to start from `1` instead of `0` because we reserve `0` for padding the sequence features.
+# We see that `'category_code'` and `'brand'` columns have null values, and in the following cell we are going to fill these nulls with via categorify op, and then all categorical columns will be encoded to continuous integers. Categorify op maps nulls to `1`, OOVs to `2`, automatically. We reserve `0` for padding the sequence features. The encoding of each category starts from `3`.
 
 # ## 5. Initialize NVTabular Workflow
 # 
@@ -136,7 +136,7 @@ df.isnull().any()
 
 # categorify features 
 item_id = ['product_id'] >> nvt.ops.TagAsItemID()
-cat_feats = item_id + ['category_code', 'brand', 'user_id', 'category_id', 'event_type'] >> nvt.ops.Categorify(start_index=1)
+cat_feats = item_id + ['category_code', 'brand', 'user_id', 'category_id', 'event_type'] >> nvt.ops.Categorify()
 
 
 # ### 5.2. Extract Temporal Features
@@ -394,7 +394,7 @@ dataset = nvt.Dataset(df)
 workflow.fit_transform(dataset).to_parquet(os.path.join(INPUT_DATA_DIR, "processed_nvt"))
 
 
-# In[26]:
+# In[ ]:
 
 
 workflow.output_schema

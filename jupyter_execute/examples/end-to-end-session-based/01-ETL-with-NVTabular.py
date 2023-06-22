@@ -31,7 +31,7 @@
 # 
 # **Launch the docker container**
 # ```
-# docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -p 8888:8888 -v <path_to_data>:/workspace/data/  nvcr.io/nvidia/merlin/merlin-pytorch:22.XX
+# docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -p 8888:8888 -v <path_to_data>:/workspace/data/  nvcr.io/nvidia/merlin/merlin-pytorch:23.XX
 # ```
 # This script will mount your local data folder that includes your data files to `/workspace/data` directory in the merlin-pytorch docker container.
 
@@ -145,23 +145,23 @@ gc.collect()
 # 
 # NVTabular supports different feature engineering transformations required by deep learning (DL) models such as Categorical encoding and numerical feature normalization. It also supports feature engineering and generating sequential features. 
 # 
-# More information about the supported features can be found <a href=https://nvidia-merlin.github.io/NVTabular/main/index.html> here. </a>
+# More information about the supported features can be found <a href=https://nvidia-merlin.github.io/NVTabular/> here. </a>
 
 # ### Feature engineering: Create and Transform items features
 
 # In this cell, we are defining three transformations ops: 
 # 
-# - 1. Encoding categorical variables using `Categorify()` op. We set `start_index` to 1 so that encoded null values start from `1` instead of `0` because we reserve `0` for padding the sequence features.
+# - 1. Encoding categorical variables using `Categorify()` op. Categorify op maps nulls to `1`, OOVs to `2`, automatically. We reserve `0` for padding the sequence features. The encoding of each category starts from 3.
 # - 2. Deriving temporal features from timestamp and computing their cyclical representation using a custom lambda function. 
 # - 3. Computing the item recency in days using a custom op. Note that item recency is defined as the difference between the first occurrence of the item in dataset and the actual date of item interaction. 
 # 
-# For more ETL workflow examples, visit NVTabular [example notebooks](https://github.com/NVIDIA-Merlin/NVTabular/tree/main/examples).
+# For more ETL workflow examples, visit NVTabular [example notebooks](https://github.com/NVIDIA-Merlin/NVTabular/tree/stable/examples).
 
 # In[11]:
 
 
 # Encodes categorical features as contiguous integers
-cat_feats = ColumnSelector(['category', 'item_id']) >> nvt.ops.Categorify(start_index=1)
+cat_feats = ColumnSelector(['category', 'item_id']) >> nvt.ops.Categorify()
 
 # create time features
 session_ts = ColumnSelector(['timestamp'])

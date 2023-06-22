@@ -66,7 +66,7 @@
 
 # Please note these <b>important points</b> that are relevant to multi-gpu training:
 # - <b>specifying multiple GPUs</b>: PyTorch distributed launch environment will recognize that we have two GPUs, since the `--nproc_per_node` arg of `torch.distributed.launch` takes care of assigning one GPU per process and performs the training loop on multiple GPUs (2 in this case) using different batches of the data in a data-parallel fashion.
-# - <b>data repartitioning</b>: when training on multiple GPUs, data must be re-partitioned into >1 partitions where the number of partitions must be at least equal to the number of GPUs. The torch utility library in Transformers4Rec does this automatically and outputs a UserWarning message. If you would like to avoid this warning message, you may choose to manually re-partition your data files before you launch the training loop or function. See [this document](https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html#distributeddataparallel) for further information on how to do manual re-partitioning.
+# - <b>data repartitioning</b>: when training on multiple GPUs, data must be re-partitioned into >1 partitions where the number of partitions must be at least equal to the number of GPUs. The torch utility library in Transformers4Rec does this automatically and outputs a UserWarning message. If you would like to avoid this warning message, you may choose to manually re-partition your data files before you launch the training loop or function. See [this document](https://nvidia-merlin.github.io/Transformers4Rec/stable/multi_gpu_train.html#distributeddataparallel) for further information on how to do manual re-partitioning.
 # - <b>training and evaluation batch sizes</b>: in the default DistributedDataParallel mode we will be running, keeping the batch size unchanged means each worker will receive the same-size batch despite the fact that you are now using multiple GPUs. If you would like to keep the total batch size constant, you may want to divide the training and evaluation batch sizes by the number of GPUs you are running on, which is expected to reduce time it takes train and evaluate on each batch.
 
 # In[ ]:
@@ -95,9 +95,9 @@ get_ipython().system(' torchrun --nproc_per_node 2 pyt_trainer.py --path "/works
 
 # ## References
 
-# - Multi-GPU data-parallel training using the Trainer class https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html
+# - Multi-GPU data-parallel training using the Trainer class https://nvidia-merlin.github.io/Transformers4Rec/stable/multi_gpu_train.html
 # 
 # - Merlin Transformers4rec: https://github.com/NVIDIA-Merlin/Transformers4Rec
 # 
-# - Merlin NVTabular: https://github.com/NVIDIA-Merlin/NVTabular/tree/main/nvtabular
+# - Merlin NVTabular: https://github.com/NVIDIA-Merlin/NVTabular/tree/stable/nvtabular
 # - Merlin Dataloader: https://github.com/NVIDIA-Merlin/dataloader

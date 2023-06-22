@@ -53,14 +53,14 @@
 # 
 # Here are some of the most important modules:
 # 
-# - [TabularSequenceFeatures](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.TabularSequenceFeatures) is the input block for sequential features. Based on a `Schema` and options set by the user, it dynamically creates all the necessary layers (e.g. embedding layers) to encode, normalize, and aggregate categorical and continuous features. It also allows to set the `masking` training approach (e.g. Causal LM, Masked LM).
-# - [TransformerBlock](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.TransformerBlock) class is the bridge that adapts HuggingFace Transformers for session-based and sequential-based recommendation models.
-# - [SequentialBlock](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.SequentialBlock) allows the definition of a model body as as sequence of layer (similarly to [torch.nn.sequential](https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html)). It is designed to define our model as a sequence of layers and automatically setting the input shape of a layer from the output shape of the previous one.
-# - [Head](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.Head) class defines the head of a model.
-# - [NextItemPredictionTask](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask) is the class to support next item prediction task, combining a model body with a head.
-# - [Trainer](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.Trainer) extends the `Trainer` class from HF transformers and manages the model training and evaluation.
+# - [TabularSequenceFeatures](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.html#transformers4rec.torch.TabularSequenceFeatures) is the input block for sequential features. Based on a `Schema` and options set by the user, it dynamically creates all the necessary layers (e.g. embedding layers) to encode, normalize, and aggregate categorical and continuous features. It also allows to set the `masking` training approach (e.g. Causal LM, Masked LM).
+# - [TransformerBlock](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.html#transformers4rec.torch.TransformerBlock) class is the bridge that adapts HuggingFace Transformers for session-based and sequential-based recommendation models.
+# - [SequentialBlock](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.html#transformers4rec.torch.SequentialBlock) allows the definition of a model body as as sequence of layer (similarly to [torch.nn.sequential](https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html)). It is designed to define our model as a sequence of layers and automatically setting the input shape of a layer from the output shape of the previous one.
+# - [Head](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.html#transformers4rec.torch.Head) class defines the head of a model.
+# - [NextItemPredictionTask](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask) is the class to support next item prediction task, combining a model body with a head.
+# - [Trainer](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.html#transformers4rec.torch.Trainer) extends the `Trainer` class from HF transformers and manages the model training and evaluation.
 # 
-# You can check the [full documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/index.html) of Transformers4Rec if needed.
+# You can check the [full documentation](https://nvidia-merlin.github.io/Transformers4Rec/stable/index.html) of Transformers4Rec if needed.
 
 # In Figure 1, we present a reference architecture that we are going to build with Transformers4Rec PyTorch API in this notebook. We are going to start using only `product-id` as input feature, but as you can notice in the figure, we can add additional categorical and numerical features later to improve recommendation accuracy, as shown in Section 3.2.4.
 
@@ -613,53 +613,6 @@ with open("results.txt", 'a') as f:
         f.write('%s:%s\n' % (key, value.item()))
 
 
-# After model training and evaluation is completed we can save our trained model in the next section. 
-
-# ##### Exporting the preprocessing workflow and model for deployment to Triton server
-
-# Load the preproc workflow that we saved in the ETL notebook.
-
-# In[8]:
-
-
-import nvtabular as nvt
-
-# define data path about where to get our data
-INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
-workflow_path = os.path.join(INPUT_DATA_DIR, 'workflow_etl')
-workflow = nvt.Workflow.load(workflow_path)
-
-
-# In[9]:
-
-
-# dictionary representing max sequence length for the sequential (list) columns
-sparse_features_max = {
-    fname: sequence_length
-    for fname in x_cat_names + x_cont_names + ['category_code-list']
-}
-
-sparse_features_max
-
-
-# It is time to export the proc workflow and model in the format required by Triton Inference Server, by using the NVTabular’s `export_pytorch_ensemble()` function.
-
-# In[ ]:
-
-
-from nvtabular.inference.triton import export_pytorch_ensemble
-export_pytorch_ensemble(
-    model,
-    workflow,
-    sparse_max=sparse_features_max,
-    name= "t4r_pytorch",
-    model_path= os.path.join(INPUT_DATA_DIR, 'models'),
-    label_columns =[],
-)
-
-
-# Before we move on to the next notebook, `04-Inference-with-Triton`, let's print out our results.txt file. 
-
 # In[13]:
 
 
@@ -671,8 +624,6 @@ get_ipython().system('cat results.txt')
 # ## Wrap Up
 
 # Congratulations on finishing this notebook. In this tutorial, we have presented Transformers4Rec, an open source library designed to enable RecSys researchers and practitioners to quickly and easily explore the latest developments of the NLP for sequential and session-based recommendation tasks.
-
-# Please shut down the kernel before moving on to the next notebook, `04-Inference-with-Triton.ipynb`.
 
 # ## References
 

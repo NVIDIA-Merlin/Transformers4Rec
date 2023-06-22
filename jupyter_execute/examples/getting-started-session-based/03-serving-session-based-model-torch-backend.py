@@ -132,7 +132,7 @@ model_input_dict = table.to_dict()
 # In[9]:
 
 
-model_input_dict
+model_input_dict['item_id-list__values']
 
 
 # In[10]:
@@ -179,7 +179,7 @@ workflow = Workflow.load(os.path.join(INPUT_DATA_DIR, "workflow_etl"))
 print(workflow.input_schema.column_names)
 
 
-# For transforming the raw input features during inference, we use [TransformWorkflow](https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/workflow.py) operator that ensures the workflow is correctly saved and packaged with the required config so the server will know how to load it. We use [PredictPyTorch](https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/pytorch.py) operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.
+# For transforming the raw input features during inference, we use [TransformWorkflow](https://github.com/NVIDIA-Merlin/systems/blob/stable/merlin/systems/dag/ops/workflow.py) operator that ensures the workflow is correctly saved and packaged with the required config so the server will know how to load it. We use [PredictPyTorch](https://github.com/NVIDIA-Merlin/systems/blob/stable/merlin/systems/dag/ops/pytorch.py) operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.
 
 # In[15]:
 
@@ -284,4 +284,4 @@ response['next-item'].shape
 
 # We return a response for each request in the df. Each row in the `response['next-item']` array corresponds to the logit values per item in the catalog, and one logit score corresponding to the null, OOV and padded items. The first score of each array in each row corresponds to the score for the padded item, OOV or null item. Note that we dont have OOV or null items in our syntheticall generated datasets.
 # 
-# This is the end of this suit of examples. You successfully performed feature engineering with NVTabular trained transformer architecture based session-based recommendation models with Transformers4Rec deployed the saved workflow and the trained model to Triton Inference Server with Torch backend, sent request and got responses from the server. If you would like to learn how to serve a TF4Rec model with Python backend please visit this [example](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.ipynb).
+# This is the end of this suit of examples. You successfully performed feature engineering with NVTabular trained transformer architecture based session-based recommendation models with Transformers4Rec deployed the saved workflow and the trained model to Triton Inference Server with Torch backend, sent request and got responses from the server. If you would like to learn how to serve a TF4Rec model with Python backend please visit this [example](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.ipynb).
