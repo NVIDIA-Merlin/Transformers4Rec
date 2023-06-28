@@ -528,50 +528,68 @@ class Trainer(BaseTrainer):
                     if labels_host is None
                     else nested_concat(labels_host, labels, padding_index=0)
                 )
-            if preds is not None and self.args.predict_top_k > 0:
-                if self.model.top_k:
-                    raise ValueError(
-                        "you cannot set top_k argument in the model class and the, "
-                        "predict_top_k  in the trainer at the same time. Please ensure setting "
-                        "only predict_top_k"
-                    )
+
+            if (
+                preds is not None
+                and any(isinstance(x, NextItemPredictionTask) for x in model.prediction_tasks)
+                and (self.args.predict_top_k or self.model.top_k)
+            ):
                 # get outputs of next-item scores
                 if isinstance(preds, dict):
-                    assert any(
-                        isinstance(x, NextItemPredictionTask) for x in model.prediction_tasks
-                    ), "Top-k prediction is specific to NextItemPredictionTask, "
-                    "Please ensure `self.args.predict_top_k == 0` "
                     pred_next_item = preds["next-item"]
                 else:
-                    assert isinstance(
-                        model.prediction_tasks[0], NextItemPredictionTask
-                    ), "Top-k prediction is specific to NextItemPredictionTask, "
-                    "Please ensure `self.args.predict_top_k == 0` "
                     pred_next_item = preds
 
-                preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(
-                    pred_next_item, k=self.args.predict_top_k, dim=-1
-                )
-                self._maybe_log_predictions(
-                    labels,
-                    preds_sorted_item_ids,
-                    preds_sorted_item_scores,
-                    # outputs["pred_metadata"],
-                    metrics_results_detailed,
-                    metric_key_prefix,
-                )
-                # The output predictions will be a tuple with the ranked top-n item ids,
-                # and item recommendation scores
-                if isinstance(preds, dict):
-                    preds["next-item"] = (
+                preds_sorted_item_scores = None
+                preds_sorted_item_ids = None
+
+                if self.model.top_k is not None and isinstance(pred_next_item, (list, tuple)):
+                    preds_sorted_item_scores, preds_sorted_item_ids = pred_next_item
+
+                    if self.args.predict_top_k:
+                        if self.args.predict_top_k > self.model.top_k:
+                            raise ValueError(
+                                "The args.predict_top_k should not be larger than model.top_k. "
+                                "The model.top_k is available to support inference (e.g. when "
+                                "serving with Triton Inference Server) to return only the top-k "
+                                "predicted items ids and their scores."
+                                "When doing offline predictions with `trainer.predict(), "
+                                "if you set model.top_k, the model will also limit the number of "
+                                "predictions output from trainer.predict(). "
+                                "In that case, you want either to reduce args.predict_top_k or "
+                                "increase model.top_k, so that args.predict_top_k is "
+                                "not larger than model.top_k."
+                            )
+                        preds_sorted_item_scores = preds_sorted_item_scores[
+                            :, : self.args.predict_top_k
+                        ]
+                        preds_sorted_item_ids = preds_sorted_item_ids[:, : self.args.predict_top_k]
+                elif self.args.predict_top_k:
+                    preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(
+                        pred_next_item, k=self.args.predict_top_k, dim=-1
+                    )
+
+                if preds_sorted_item_scores is not None:
+                    self._maybe_log_predictions(
+                        labels,
                         preds_sorted_item_ids,
                         preds_sorted_item_scores,
+                        # outputs["pred_metadata"],
+                        metrics_results_detailed,
+                        metric_key_prefix,
                     )
-                else:
-                    preds = (
-                        preds_sorted_item_ids,
-                        preds_sorted_item_scores,
-                    )
+                    # The output predictions will be a tuple with the ranked top-n item ids,
+                    # and item recommendation scores
+                    if isinstance(preds, dict):
+                        preds["next-item"] = (
+                            preds_sorted_item_ids,
+                            preds_sorted_item_scores,
+                        )
+                    else:
+                        preds = (
+                            preds_sorted_item_ids,
+                            preds_sorted_item_scores,
+                        )
 
             preds_host = (
                 preds

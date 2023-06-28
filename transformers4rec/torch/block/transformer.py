@@ -30,7 +30,20 @@ TransformerBody = Union[PreTrainedModel, PretrainedConfig]
 
 
 class TransformerPrepare(torch.nn.Module):
-    def __init__(self, transformer, masking):
+    """
+    Base class to prepare additional inputs to the forward call of
+    the HF transformer layer.
+
+    Parameters
+    ----------
+    transformer : TransformerBody
+        The Transformer module.
+    masking : Optional[MaskSequence]
+        Masking block used to for masking input sequences.
+        By default None.
+    """
+
+    def __init__(self, transformer: TransformerBody, masking: Optional[MaskSequence] = None):
         super().__init__()
         self.transformer = transformer
         self.masking = masking
@@ -40,6 +53,12 @@ class TransformerPrepare(torch.nn.Module):
 
 
 class GPT2Prepare(TransformerPrepare):
+    """TransformerPrepare module for GPT-2.
+
+    This class extends the inputs for GPT-2 with a
+    triangular causal mask to the inputs.
+    """
+
     def forward(self, inputs_embeds) -> Dict[str, Any]:
         seq_len = inputs_embeds.shape[1]
         # head_mask has shape n_layer x batch x n_heads x N x N

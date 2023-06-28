@@ -18,7 +18,7 @@ import pytest
 import torch
 
 import transformers4rec.torch as tr
-from transformers4rec.torch.ranking_metric import MeanReciprocalRankAt
+from transformers4rec.torch.ranking_metric import MeanReciprocalRankAt, RecallAt
 
 # fixed parameters for tests
 list_metrics = list(tr.ranking_metric.ranking_metrics_registry.keys())
@@ -62,6 +62,58 @@ def test_mean_recipricol_rank():
             torch.abs(torch.add(result, -torch.tensor([0.3333, 0.3333, 0.4444, 0.4444]))), 1e-3
         )
     )
+
+
+def test_recall_at():
+    metric = RecallAt([1, 2, 3, 4], labels_onehot=False)
+    result = metric(
+        torch.tensor(
+            [[1, 2, 3, 4, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 4, 3, 2, 1]]
+        ),
+        torch.tensor(
+            [[0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0, 0]]
+        ),
+    )
+    assert torch.all(
+        torch.lt(
+            torch.abs(torch.add(result, -torch.tensor([0.3333, 0.3333, 0.6667, 0.6667]))), 1e-3
+        )
+    )
+
+
+def test_recall_at_3d():
+    metric = RecallAt([1, 2, 3, 4], labels_onehot=False)
+    result = metric(
+        torch.tensor(
+            [
+                [[1, 2, 3, 4, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 4, 3, 2, 1]],
+                [[1, 2, 3, 4, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 4, 3, 2, 1]],
+            ]
+        ),
+        torch.tensor(
+            [
+                [[0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0, 0]],
+                [[0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 0, 0, 0]],
+            ]
+        ),
+    )
+    assert torch.all(
+        torch.lt(torch.abs(torch.add(result, -torch.tensor([0.25, 0.25, 0.75, 0.75]))), 1e-3)
+    )
+
+
+@pytest.mark.parametrize("cutoff", [4, [4]])
+def test_recall_at_single_metric(cutoff):
+    metric = RecallAt(cutoff, labels_onehot=False)
+    result = metric(
+        torch.tensor(
+            [[1, 2, 3, 4, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 4, 3, 2, 1]]
+        ),
+        torch.tensor(
+            [[0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0, 0]]
+        ),
+    )
+    assert torch.all(torch.lt(torch.abs(torch.add(result, -torch.tensor([0.6667]))), 1e-3))
 
 
 # TODO: Compare the metrics @K between pytorch and numpy

@@ -38,8 +38,9 @@ class T4RecTrainingArguments(TrainingArguments):
     predict_top_k:  Option[int], int
         Truncate recommendation list to the highest top-K predicted items,
         (do not affect evaluation metrics computation),
-        this parameter is specific to NextItemPredictionTask.
-        by default 0
+        This parameter is specific to NextItemPredictionTask and only affects
+        model.predict() and model.evaluate(), which both call `Trainer.evaluation_loop`.
+        By default 100.
     log_predictions : Optional[bool], bool
         log predictions, labels and metadata features each --compute_metrics_each_n_steps
         (for test set).
@@ -90,10 +91,10 @@ class T4RecTrainingArguments(TrainingArguments):
     )
 
     predict_top_k: int = field(
-        default=0,
+        default=100,
         metadata={
             "help": "Truncate recommendation list to the highest top-K predicted items (do not affect evaluation metrics computation), "
-            "this parameter is specific to NextItemPredictionTask."
+            "this parameter is specific to NextItemPredictionTask. Default is 100."
         },
     )
 

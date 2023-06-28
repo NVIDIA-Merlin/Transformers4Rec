@@ -98,7 +98,20 @@ class StackFeatures(TabularAggregation):
 
 
 class ElementwiseFeatureAggregation(TabularAggregation):
-    def _check_input_shapes_equal(self, inputs):
+    """Base class for aggregation methods that aggregates
+    features element-wise.
+    It implements two check methods to ensure inputs have the correct shape.
+    """
+
+    def _check_input_shapes_equal(self, inputs: TabularData):
+        """Checks if the shapes of all inputs are equal.
+
+        Parameters
+        ----------
+        inputs : TabularData
+            Dictionary of tensors.
+
+        """
         all_input_shapes_equal = len(set([x.shape for x in inputs.values()])) == 1
         if not all_input_shapes_equal:
             raise ValueError(
@@ -107,6 +120,14 @@ class ElementwiseFeatureAggregation(TabularAggregation):
             )
 
     def _check_inputs_last_dim_equal(self, inputs_sizes):
+        """
+        Checks if the last dimensions of all inputs are equal.
+
+        Parameters
+        ----------
+        inputs_sizes : dict[str, Union[List[int], torch.Size]]
+            A dictionary containing the sizes of the inputs.
+        """
         all_input_last_dim_equal = len(set([x[-1] for x in inputs_sizes.values()])) == 1
         if not all_input_last_dim_equal:
             raise ValueError(

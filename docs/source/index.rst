@@ -15,7 +15,7 @@ Merlin Transformers4Rec GitHub Repository
 
 About Merlin
   Merlin is the overarching project that brings together the Merlin projects.
-  See the `documentation <https://nvidia-merlin.github.io/Merlin/main/README.html>`_
+  See the `documentation <https://nvidia-merlin.github.io/Merlin/stable/README.html>`_
   or the `repository <https://github.com/NVIDIA-Merlin/Merlin>`_ on GitHub.
 
 Developer website for Merlin
