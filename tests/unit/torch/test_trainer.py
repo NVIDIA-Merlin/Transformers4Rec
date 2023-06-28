@@ -24,6 +24,7 @@ from merlin.schema import Schema
 import transformers4rec.torch as tr
 from transformers4rec.config import trainer
 from transformers4rec.config import transformer as tconf
+from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
@@ -328,6 +329,20 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
             ],
         ),
         (
+            tr.NextItemPredictionTask(
+                weight_tying=False,
+                metrics=(
+                    NDCGAt(top_ks=[5, 10], labels_onehot=True),
+                    RecallAt(top_ks=[10], labels_onehot=True),
+                ),
+            ),
+            [
+                "eval_/next-item/ndcg_at_5",
+                "eval_/next-item/ndcg_at_10",
+                "eval_/next-item/recall_at_10",
+            ],
+        ),
+        (
             tr.BinaryClassificationTask("click", summary_type="mean"),
             [
                 "eval_/click/binary_classification_task/binary_accuracy",
@@ -347,7 +362,7 @@ def test_trainer_music_streaming(task_and_metrics):
     data = tr.data.music_streaming_testing_data
     schema = data.schema
     batch_size = 16
-    task, default_metric = task_and_metrics
+    task, expected_metrics = task_and_metrics
 
     inputs = tr.TabularSequenceFeatures.from_schema(
         schema,
@@ -388,13 +403,18 @@ def test_trainer_music_streaming(task_and_metrics):
     predictions = recsys_trainer.predict(data.path)
 
     assert isinstance(eval_metrics, dict)
-    assert set(default_metric).issubset(set(eval_metrics.keys()))
+    assert set(expected_metrics).issubset(set(eval_metrics.keys()))
     assert eval_metrics["eval_/loss"] is not None
 
     assert predictions is not None
+
+    DEFAULT_PREDICT_TOP_K = 100
+
     # 1000 is the total samples in the testing data
     if isinstance(task, tr.NextItemPredictionTask):
-        assert predictions.predictions.shape == (1000, task.target_dim)
+        top_predicted_item_ids, top_prediction_scores = predictions.predictions
+        assert top_predicted_item_ids.shape == (1000, DEFAULT_PREDICT_TOP_K)
+        assert top_prediction_scores.shape == (1000, DEFAULT_PREDICT_TOP_K)
     else:
         assert predictions.predictions.shape == (1000,)
 
@@ -558,17 +578,79 @@ def test_trainer_with_multiple_tasks(schema_type):
     assert predictions.predictions["click/binary_classification_task"].shape == (1000,)
 
 
-def test_trainer_trop_k_with_wrong_task():
+@pytest.mark.parametrize("predict_top_k", [20, None, "default"])
+def test_trainer_predict_topk(predict_top_k):
+    DEFAULT_PREDICT_TOP_K = 100
+
     data = tr.data.music_streaming_testing_data
     schema = data.schema
     batch_size = 16
-    predict_top_k = 20
 
-    task = tr.BinaryClassificationTask("click", summary_type="mean")
+    task = tr.NextItemPredictionTask(weight_tying=True)
     inputs = tr.TabularSequenceFeatures.from_schema(
         schema,
         max_sequence_length=20,
         d_output=64,
+        masking="clm",
+    )
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+    model = transformer_config.to_torch_model(inputs, task)
+
+    additional_args = {}
+    if not isinstance(predict_top_k, str):
+        additional_args["predict_top_k"] = predict_top_k
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        data_loader_engine="merlin_dataloader",
+        max_sequence_length=20,
+        report_to=[],
+        debug=["r"],
+        **additional_args,
+    )
+
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=schema,
+        train_dataset_or_path=data.path,
+        eval_dataset_or_path=data.path,
+        test_dataset_or_path=data.path,
+        compute_metrics=True,
+    )
+
+    outputs = recsys_trainer.predict(data.path)
+
+    if predict_top_k is None:
+        assert outputs.predictions.shape[1] == 10001
+    else:
+        if predict_top_k == "default":
+            predict_top_k = DEFAULT_PREDICT_TOP_K
+
+        pred_item_ids, pred_scores = outputs.predictions
+        assert len(pred_item_ids.shape) == 2
+        assert pred_item_ids.shape[1] == predict_top_k
+        assert len(pred_scores.shape) == 2
+        assert pred_scores.shape[1] == predict_top_k
+
+
+@pytest.mark.parametrize("predict_top_k", [15, 20, 30, None])
+@pytest.mark.parametrize("top_k", [20, None])
+def test_trainer_predict_top_k_x_top_k(predict_top_k, top_k):
+    data = tr.data.music_streaming_testing_data
+    schema = data.schema
+    batch_size = 16
+
+    task = tr.NextItemPredictionTask(weight_tying=True)
+
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        schema,
+        max_sequence_length=20,
+        d_output=64,
+        masking="clm",
     )
     transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
     model = transformer_config.to_torch_model(inputs, task)
@@ -594,7 +676,97 @@ def test_trainer_trop_k_with_wrong_task():
         test_dataset_or_path=data.path,
         compute_metrics=True,
     )
-    with pytest.raises(AssertionError) as excinfo:
-        recsys_trainer.predict(data.path)
 
-    assert "Top-k prediction is specific to NextItemPredictionTask" in str(excinfo.value)
+    model.top_k = top_k
+
+    if predict_top_k and top_k and predict_top_k > top_k:
+        with pytest.raises(ValueError) as excinfo:
+            recsys_trainer.predict(data.path)
+        assert "The args.predict_top_k should not be larger than model.top_k" in str(excinfo.value)
+
+    else:
+        outputs = recsys_trainer.predict(data.path)
+
+        if predict_top_k or top_k:
+            expected_top_k = predict_top_k or top_k
+
+            pred_item_ids, pred_scores = outputs.predictions
+            assert len(pred_item_ids.shape) == 2
+            assert pred_item_ids.shape[1] == expected_top_k
+            assert len(pred_scores.shape) == 2
+            assert pred_scores.shape[1] == expected_top_k
+        else:
+            ITEM_CARDINALITY = 10001
+            assert outputs.predictions.shape[1] == ITEM_CARDINALITY
+
+
+def test_trainer_with_pretrained_embeddings():
+    import numpy as np
+    from merlin.dataloader.ops.embeddings import EmbeddingOperator
+    from merlin.io import Dataset
+
+    from transformers4rec.torch.utils.data_utils import MerlinDataLoader
+
+    data = tr.data.music_streaming_testing_data
+    schema = data.merlin_schema.select_by_name(
+        ["item_id", "item_category", "item_recency", "item_genres", "user_id"]
+    )
+    batch_size, max_length, pretrained_dim = 128, 20, 16
+    item_cardinality = schema["item_id"].int_domain.max + 1
+    np_emb_item_id = np.random.rand(item_cardinality, pretrained_dim)
+
+    embeddings_op = EmbeddingOperator(
+        np_emb_item_id, lookup_key="item_id", embedding_name="pretrained_item_id_embeddings"
+    )
+    # set dataloader with pre-trained embeddings
+    data_loader = MerlinDataLoader.from_schema(
+        schema,
+        Dataset(data.path, schema=schema),
+        max_sequence_length=max_length,
+        batch_size=batch_size,
+        transforms=[embeddings_op],
+        shuffle=False,
+    )
+
+    # set the model schema from data-loader
+    model_schema = data_loader.output_schema
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        model_schema,
+        max_sequence_length=max_length,
+        pretrained_output_dims=8,
+        normalizer="layer-norm",
+        d_output=64,
+        masking="mlm",
+    )
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+    task = tr.NextItemPredictionTask(weight_tying=True)
+    model = transformer_config.to_torch_model(inputs, task, max_sequence_length=max_length)
+
+    assert isinstance(model.input_schema, Schema)
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        max_sequence_length=max_length,
+        fp16=False,
+        report_to=[],
+        debug=["r"],
+    )
+    # Explicitly pass the merlin dataloader with pre-trained embeddings
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=schema,
+        train_dataloader=data_loader,
+        eval_dataloader=data_loader,
+        compute_metrics=True,
+    )
+
+    recsys_trainer.train()
+    eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+
+    assert isinstance(eval_metrics, dict)
+    assert eval_metrics["eval_/loss"] is not None

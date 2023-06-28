@@ -27,6 +27,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import re
 import subprocess
 import sys
 from typing import List, cast
@@ -121,25 +122,26 @@ source_suffix = [".rst", ".md"]
 # at a commit (not a Git repo).
 if os.path.exists(gitdir):
     tag_refs = subprocess.check_output(["git", "tag", "-l", "v*"]).decode("utf-8").split()
+    tag_refs = [tag for tag in tag_refs if re.match(r"^v[0-9]+.[0-9]+.[0-9]+$", tag)]
     tag_refs = cast(List[str], natsorted(tag_refs)[-6:])
     smv_tag_whitelist = r"^(" + r"|".join(tag_refs) + r")$"
 else:
     # SMV is reading conf.py from a Git archive of the repo at a specific commit.
     smv_tag_whitelist = r"^v.*$"
 # Only include main branch for now
-smv_branch_whitelist = "^main$"
+smv_branch_whitelist = "^(main|stable)$"
 
 smv_refs_override_suffix = "-docs"
 
 html_sidebars = {"**": ["versions.html"]}
-html_baseurl = "https://nvidia-merlin.github.io/Transformers4Rec/main"
+html_baseurl = "https://nvidia-merlin.github.io/Transformers4Rec/stable/"
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "cudf": ("https://docs.rapids.ai/api/cudf/stable/", None),
     "distributed": ("https://distributed.dask.org/en/latest/", None),
     "torch": ("https://pytorch.org/docs/stable/", None),
-    "merlin-core": ("https://nvidia-merlin.github.io/core/main", None),
+    "merlin-core": ("https://nvidia-merlin.github.io/core/stable/", None),
 }
 
 autodoc_inherit_docstrings = False

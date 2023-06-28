@@ -25,14 +25,14 @@ Transformers4Rec is part of the NVIDIA Merlin ecosystem for recommender systems,
 - [HugeCTR](https://github.com/NVIDIA/HugeCTR) - A GPU-accelerated recommender framework designed to distribute training across multiple GPUs and nodes and estimate Click-Through Rates (CTRs).
 
 ## Supported Hugging Face Architectures and Pre-Training Approaches
-Transformers4Rec supports the following [masking tasks](https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking):
+Transformers4Rec supports the following [masking tasks](sequence-masking):
 
 - Causal Language Modeling (CLM)
 - Masked Language Modeling (MLM)
 - Permutation Language Modeling (PLM)
 - Replacement Token Detection (RTD)
 
-In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide a `TransformerBlock` module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a `transformer_registry`, which includes pre-defined [`T4RecConfig`](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig) constructors that automatically set the arguments of the related Hugging Face Transformers' configuration classes.
+In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide a `TransformerBlock` module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a `transformer_registry`, which includes pre-defined {py:class}`T4RecConfig <transformers4rec.config.transformer.T4RecConfig>` constructors that automatically set the arguments of the related Hugging Face Transformers' configuration classes.
 
 The table below represents the architectures that are currently supported in Transformers4Rec and links them to the possible masking tasks. It also lists the pre-registered `T4RecConfig` classes in the `Registered` column.
 

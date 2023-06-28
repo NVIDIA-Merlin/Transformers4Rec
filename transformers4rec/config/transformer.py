@@ -15,13 +15,55 @@
 #
 
 import transformers
+from merlin.models.utils.doc_utils import docstring_parameter
 from merlin.models.utils.registry import Registry
 
 transformer_registry: Registry = Registry("transformers")
 
 
+TRANSFORMER_CONFIG_PARAMETER_DOCSTRING = """        
+        d_model: int
+            The  hidden dimension of the transformer layer.
+        n_head: int
+            The number of attention heads in each transformer layer.
+        n_layer: int
+            The number of transformer layers to stack.
+        total_seq_length: int
+            The maximum sequence length.
+        hidden_act: str, optional
+            The activation function in the hidden layers.
+            By default 'gelu'
+        initializer_range: float, optional
+            The standard deviation of the `truncated_normal_initializer`
+            for initializing all transformer's weights parameters.
+            By default 0.01
+        layer_norm_eps: float, optional
+            The epsilon used by the layer normalization layers.
+            By default 0.03
+        dropout: float, optional
+            The dropout probability. By default 0.3
+        pad_token: int, optional
+            The padding token ID. By default 0
+        log_attention_weights: bool, optional
+            Whether to log attention weights. By default False
+"""
+
+
 class T4RecConfig:
+    """A class responsible for setting the configuration of the transformers class
+    from Hugging Face and returning the corresponding T4Rec model.
+    """
+
     def to_huggingface_torch_model(self):
+        """
+        Instantiate a Hugging Face transformer model based on
+        the configuration parameters of the class.
+
+        Returns
+        -------
+        transformers.PreTrainedModel
+            The Hugging Face transformer model.
+        """
         model_cls = transformers.MODEL_MAPPING[self.transformers_config_cls]
 
         return model_cls(self)
@@ -35,6 +77,37 @@ class T4RecConfig:
         loss_reduction="mean",
         **kwargs
     ):
+        """Links the Hugging Face transformer model to the given input block and prediction tasks,
+        and returns a T4Rec model.
+
+        Parameters
+        ----------
+        input_features: torch4rec.TabularSequenceFeatures
+            The sequential block that represents the input features and
+            defines the masking strategy for training and evaluation.
+        prediction_task: torch4rec.PredictionTask
+            One or multiple prediction tasks.
+        task_blocks: list, optional
+            List of task-specific blocks that we apply on top of the HF transformer's output.
+        task_weights: list, optional
+            List of the weights to use for combining the tasks losses.
+        loss_reduction: str, optional
+            The reduction to apply to the prediction losses, possible values are:
+                'none': no reduction will be applied,
+                'mean': the weighted mean of the output is taken,
+                'sum': the output will be summed.
+            By default: 'mean'.
+
+        Returns
+        -------
+        torch4rec.Model
+            The T4Rec torch model.
+
+        Raises
+        ------
+        ValueError
+            If input block or prediction task is of the wrong type.
+        """
         from .. import torch as torch4rec
 
         if not isinstance(input_features, torch4rec.TabularSequenceFeatures):
@@ -68,6 +141,11 @@ class T4RecConfig:
 
 @transformer_registry.register("reformer")
 class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
+    """Subclass of T4RecConfig and transformers.ReformerConfig from Hugging Face.
+    It handles configuration for Reformer layers in the context of T4Rec models.
+    """
+
+    @docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
     @classmethod
     def build(
         cls,
@@ -84,6 +162,21 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
         axial_pos_shape_first_dim=4,
         **kwargs
     ):
+        """
+        Creates an instance of ReformerConfig with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+        axial_pos_shape_first_dim: int, optional
+            The first dimension of the axial position encodings.
+            During training, the product of the position dims has to be equal to the sequence length.
+
+        Returns
+        -------
+        ReformerConfig
+            An instance of ReformerConfig.
+        """
         # To account for target positions at inference mode, we extend the maximum sequence length.
         total_seq_length = total_seq_length + 2
         return cls(
@@ -115,7 +208,12 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
 
 
 @transformer_registry.register("gtp2")
+@docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
 class GPT2Config(T4RecConfig, transformers.GPT2Config):
+    """Subclass of T4RecConfig and transformers.GPT2Config from Hugging Face.
+    It handles configuration for GPT2 layers in the context of T4Rec models.
+    """
+
     @classmethod
     def build(
         cls,
@@ -131,6 +229,18 @@ class GPT2Config(T4RecConfig, transformers.GPT2Config):
         log_attention_weights=False,
         **kwargs
     ):
+        """
+        Creates an instance of GPT2Config with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+
+        Returns
+        -------
+        GPT2Config
+            An instance of GPT2Config.
+        """
         return cls(
             n_embd=d_model,
             n_inner=d_model * 4,
@@ -152,6 +262,11 @@ class GPT2Config(T4RecConfig, transformers.GPT2Config):
 
 @transformer_registry.register("longformer")
 class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
+    """Subclass of T4RecConfig and transformers.LongformerConfig from Hugging Face.
+    It handles configuration for LongformerConfig layers in the context of T4Rec models.
+    """
+
+    @docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
     @classmethod
     def build(
         cls,
@@ -167,6 +282,18 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        """
+        Creates an instance of LongformerConfig with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+
+        Returns
+        -------
+        LongformerConfig
+            An instance of LongformerConfig.
+        """
         # To account for target positions at inference mode, we extend the maximum sequence length.
         total_seq_length = total_seq_length + 2
         return cls(
@@ -187,6 +314,11 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
 
 @transformer_registry.register("electra")
 class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
+    """Subclass of T4RecConfig and transformers.ElectraConfig from Hugging Face.
+    It handles configuration for ElectraConfig layers in the context of T4Rec models.
+    """
+
+    @docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
     @classmethod
     def build(
         cls,
@@ -202,6 +334,18 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        """
+        Creates an instance of ElectraConfig with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+
+        Returns
+        -------
+        ElectraConfig
+            An instance of ElectraConfig.
+        """
         # To account for target positions at inference mode, we extend the maximum sequence length.
         total_seq_length = total_seq_length + 2
         return cls(
@@ -224,6 +368,11 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
 
 @transformer_registry.register("albert")
 class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
+    """Subclass of T4RecConfig and transformers.AlbertConfig from Hugging Face.
+    It handles configuration for AlbertConfig layers in the context of T4Rec models.
+    """
+
+    @docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
     @classmethod
     def build(
         cls,
@@ -239,6 +388,18 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        """
+        Creates an instance of AlbertConfig with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+
+        Returns
+        -------
+        AlbertConfig
+            An instance of AlbertConfig.
+        """
         # To account for target positions at inference mode, we extend the maximum sequence length.
         total_seq_length = total_seq_length + 2
         return cls(
@@ -260,7 +421,13 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
 
 
 @transformer_registry.register("xlnet")
+@docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
 class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
+    """Subclass of T4RecConfig and transformers.XLNetConfig from Hugging Face.
+    It handles configuration for XLNetConfig layers in the context of T4Rec models.
+    """
+
+    @docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
     @classmethod
     def build(
         cls,
@@ -278,6 +445,25 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
         mem_len=1,
         **kwargs
     ):
+        """
+        Creates an instance of XLNetConfig with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+        mem_len: int,
+            The number of tokens to be cached. Pre-computed key/value pairs
+            from a previous forward pass are stored and won't be re-computed.
+            This parameter is especially useful for long sequence modeling where
+            different batches may truncate the entire sequence.
+            Tasks like user-aware recommendation could benefit from this feature.
+            By default, this parameter is set to 1, which means no caching is used.
+
+        Returns
+        -------
+        XLNetConfig
+            An instance of XLNetConfig.
+        """
         return cls(
             d_model=d_model,
             d_inner=d_model * 4,
@@ -298,6 +484,11 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
 
 @transformer_registry.register("bert")
 class BertConfig(T4RecConfig, transformers.BertConfig):
+    """Subclass of T4RecConfig and transformers.BertConfig from Hugging Face.
+    It handles configuration for BertConfig layers in the context of T4Rec models.
+    """
+
+    @docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
     @classmethod
     def build(
         cls,
@@ -313,6 +504,18 @@ class BertConfig(T4RecConfig, transformers.BertConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        """
+        Creates an instance of BertConfig with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+
+        Returns
+        -------
+        BertConfig
+            An instance of BertConfig.
+        """
         # To account for target positions at inference mode, we extend the maximum sequence length.
         total_seq_length = total_seq_length + 2
         return cls(
@@ -333,6 +536,11 @@ class BertConfig(T4RecConfig, transformers.BertConfig):
 
 @transformer_registry.register("roberta")
 class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
+    """Subclass of T4RecConfig and transformers.RobertaConfig from Hugging Face.
+    It handles configuration for RobertaConfig layers in the context of T4Rec models.
+    """
+
+    @docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
     @classmethod
     def build(
         cls,
@@ -348,6 +556,18 @@ class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        """
+        Creates an instance of RobertaConfig with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+
+        Returns
+        -------
+        RobertaConfig
+            An instance of RobertaConfig.
+        """
         # To account for target positions at inference mode, we extend the maximum sequence length.
         total_seq_length = total_seq_length + 2
         return cls(
@@ -368,6 +588,11 @@ class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
 
 @transformer_registry.register("transfo-xl")
 class TransfoXLConfig(T4RecConfig, transformers.TransfoXLConfig):
+    """Subclass of T4RecConfig and transformers. TransfoXLConfig from Hugging Face.
+    It handles configuration for TransfoXLConfig layers in the context of T4Rec models.
+    """
+
+    @docstring_parameter(transformer_cfg_parameters=TRANSFORMER_CONFIG_PARAMETER_DOCSTRING)
     @classmethod
     def build(
         cls,
@@ -383,6 +608,18 @@ class TransfoXLConfig(T4RecConfig, transformers.TransfoXLConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        """
+        Creates an instance of TransfoXLConfig with the given parameters.
+
+        Parameters
+        ----------
+        {transformer_cfg_parameters}
+
+        Returns
+        -------
+        TransfoXLConfig
+            An instance of TransfoXLConfig.
+        """
         return cls(
             d_model=d_model,
             d_embed=d_model,
