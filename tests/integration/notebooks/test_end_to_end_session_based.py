@@ -28,6 +28,7 @@ def test_func():
             os.environ["THRESHOLD_DAY_INDEX"] = "1"
             """
         )
+        print("\nexecuting tb1...")
         tb1.execute()
         assert os.path.isdir("/tmp/data/processed_nvt")
         assert os.path.isdir("/tmp/data/preproc_sessions_by_day")
@@ -53,6 +54,31 @@ def test_func():
             """
         )
         NUM_OF_CELLS = len(tb2.cells)
+        print("executing tb2...")
         tb2.execute_cell(list(range(0, NUM_OF_CELLS - 20)))
         assert os.path.isdir("/tmp/data/models")
         assert os.listdir("/tmp/data/models")
+
+    with testbook(
+        REPO_ROOT
+        / "examples"
+        / "end-to-end-session-based"
+        / "03-Session-based-Yoochoose-multigpu-training-PyT.ipynb",
+        timeout=720,
+        execute=False,
+    ) as tb3:
+        tb3.inject(
+            """
+            import os
+            os.environ["INPUT_DATA_DIR"] = "/tmp/data/"
+            os.environ["OUTPUT_DIR"] = "/tmp/data/preproc_sessions_by_day"
+            os.environ["START_TIME_INDEX"] = "1"
+            os.environ["END_TIME_INDEX"] = "4"
+            os.environ["LEARNING_RATE"] = "0.0005"
+            os.environ["BATCH_SIZE_TRAIN"] = "64"
+            os.environ["BATCH_SIZE_VALID"] = "32"
+            """
+        )
+        print("executing tb3...")
+        tb3.execute()
+        assert os.path.isfile("/tmp/data/eval_metrics.txt")
