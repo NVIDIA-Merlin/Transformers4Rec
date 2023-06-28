@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/masking.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/_modules/transformers4rec/torch/masking.html" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -362,6 +362,10 @@
     <span class="k">def</span> <span class="nf">_compute_masked_targets</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">testing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">training</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">testing</span><span class="p">:</span>
+            <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">item_ids</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+            <span class="k">return</span> <span class="n">MaskingInfo</span><span class="p">(</span><span class="n">mask_labels</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">)</span>
+
         <span class="n">masking_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_all</span><span class="p">(</span><span class="n">item_ids</span><span class="p">)</span>
         <span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">targets</span>
 
@@ -378,7 +382,8 @@
             <span class="n">label_seq_trg_eval</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
             <span class="c1"># Updating labels and mask</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="n">label_seq_trg_eval</span>
-            <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">label_seq_trg_eval</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+            <span class="c1"># We only mask padded positions</span>
+            <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">item_ids</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
 
         <span class="k">return</span> <span class="n">MaskingInfo</span><span class="p">(</span><span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 
@@ -390,6 +395,13 @@
         <span class="n">testing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">training</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">testing</span><span class="p">:</span>
+            <span class="c1"># Replacing the inputs corresponding to padded items with a trainable embedding</span>
+            <span class="c1"># To mimic training and evaluation masking strategy</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">mask_schema</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">(),</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">masked_item_embedding</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="n">inputs</span>
         <span class="c1"># shift sequence of interaction embeddings</span>
         <span class="n">pos_emb_inp</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -404,7 +416,7 @@
             <span class="p">],</span>
             <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="c1"># Replacing the inputs corresponding to masked label with a trainable embedding</span>
+        <span class="c1"># Replacing the inputs corresponding to padded items with a trainable embedding</span>
         <span class="n">pos_emb_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
             <span class="n">mask_schema</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">(),</span>
             <span class="n">pos_emb_inp</span><span class="p">,</span>
@@ -689,14 +701,16 @@
                         <span class="c1"># from the interval `[cur_len, cur_len + context_length - span_length]`</span>
                         <span class="n">start_index</span> <span class="o">=</span> <span class="p">(</span>
                             <span class="n">cur_len</span>
-                            <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                                <span class="n">context_length</span> <span class="o">-</span> <span class="n">span_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                            <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+                                <span class="n">context_length</span> <span class="o">-</span> <span class="n">span_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>  <span class="c1"># type: ignore</span>
                             <span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
                         <span class="p">)</span>
                         <span class="k">if</span> <span class="n">start_index</span> <span class="o">&lt;</span> <span class="n">max_len</span><span class="p">:</span>
                             <span class="c1"># Mask the span of non-padded items</span>
                             <span class="c1">#   `start_index:start_index + span_length`</span>
-                            <span class="n">mask_labels</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">start_index</span> <span class="p">:</span> <span class="n">start_index</span> <span class="o">+</span> <span class="n">span_length</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                            <span class="n">mask_labels</span><span class="p">[</span>
+                                <span class="n">i</span><span class="p">,</span> <span class="n">start_index</span> <span class="p">:</span> <span class="n">start_index</span> <span class="o">+</span> <span class="n">span_length</span>  <span class="c1"># type: ignore</span>
+                            <span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
                         <span class="c1"># Set `cur_len = cur_len + context_length`</span>
                         <span class="n">cur_len</span> <span class="o">+=</span> <span class="n">context_length</span>
                     <span class="c1"># if no item was masked:</span>

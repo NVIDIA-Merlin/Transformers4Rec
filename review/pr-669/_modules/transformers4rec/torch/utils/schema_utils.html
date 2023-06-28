@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/utils/schema_utils.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/_modules/transformers4rec/torch/utils/schema_utils.html" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -123,6 +123,38 @@
     <span class="n">ragged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TabularData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates random tabular data based on a given schema.</span>
+<span class="sd">    The generated data can be used for testing</span>
+<span class="sd">    data preprocessing or model training pipelines.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    schema : Schema</span>
+<span class="sd">        The schema to be used for generating the random tabular data.</span>
+<span class="sd">    num_rows : int</span>
+<span class="sd">        The number of rows.</span>
+<span class="sd">    max_session_length : Optional[int]</span>
+<span class="sd">        The maximum session length.</span>
+<span class="sd">        If None, the session length will not be limited.</span>
+<span class="sd">        By default None</span>
+<span class="sd">    min_session_length : int</span>
+<span class="sd">        The minimum session length.</span>
+<span class="sd">        By default 5</span>
+<span class="sd">    device : torch.device</span>
+<span class="sd">        The device on which the synthetic data should be created.</span>
+<span class="sd">        If None, the synthetic data will be created on the CPU.</span>
+<span class="sd">        By default None</span>
+<span class="sd">    ragged : bool</span>
+<span class="sd">        If True, the sequence features will be represented with __values and __offsets.</span>
+<span class="sd">        By default False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TabularData</span>
+<span class="sd">        A dictionary where each key is a feature name and each value is the generated</span>
+<span class="sd">        tensor.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
