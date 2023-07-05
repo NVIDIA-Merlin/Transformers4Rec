@@ -10,6 +10,7 @@ pytest.importorskip("transformers")
 
 # flake8: noqa
 
+
 @pytest.mark.notebook
 @pytest.mark.skipif(not HAS_GPU, reason="No GPU available")
 def test_func(tmp_path):
