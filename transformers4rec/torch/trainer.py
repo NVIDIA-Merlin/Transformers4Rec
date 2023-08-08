@@ -229,7 +229,7 @@ class Trainer(BaseTrainer):
         else:
             batch_size = self.args.per_device_eval_batch_size
         """
-        return len(dataloader) * dataloader._batch_size
+        return len(dataloader) * dataloader.batch_size
 
     def reset_lr_scheduler(self) -> None:
         """
