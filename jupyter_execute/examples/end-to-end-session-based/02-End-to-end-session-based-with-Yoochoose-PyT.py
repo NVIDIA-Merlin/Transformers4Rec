@@ -47,6 +47,7 @@
 
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data")
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", f"{INPUT_DATA_DIR}/preproc_sessions_by_day")
 
@@ -140,14 +141,16 @@ model = transformer_config.to_torch_model(input_module, prediction_task)
 # In[8]:
 
 
+BATCH_SIZE_TRAIN = int(os.environ.get("BATCH_SIZE_TRAIN", "512"))
+BATCH_SIZE_VALID = int(os.environ.get("BATCH_SIZE_VALID", "256"))
 training_args = tr.trainer.T4RecTrainingArguments(
             output_dir="./tmp",
             max_sequence_length=20,
             data_loader_engine='merlin',
             num_train_epochs=10, 
             dataloader_drop_last=False,
-            per_device_train_batch_size = 384,
-            per_device_eval_batch_size = 512,
+            per_device_train_batch_size = BATCH_SIZE_TRAIN,
+            per_device_eval_batch_size = BATCH_SIZE_VALID,
             learning_rate=0.0005,
             fp16=True,
             report_to = [],
@@ -170,12 +173,16 @@ recsys_trainer = tr.Trainer(
 # #### Launch daily training and evaluation
 
 # In this demo, we will use the `fit_and_evaluate` method that allows us to conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use the training data of a specific time index $t$ to train the model; then we evaluate on the validation data of the next index $t + 1$. Particularly, we set start time to 178 and end time to 180.
+# 
+# If you have generated a synthetic dataset in the previous notebook, remember to change the values 178 and 180 accordingly.
 
 # In[10]:
 
 
 from transformers4rec.torch.utils.examples_utils import fit_and_evaluate
-OT_results = fit_and_evaluate(recsys_trainer, start_time_index=178, end_time_index=180, input_dir=OUTPUT_DIR)
+start_time_idx = int(os.environ.get("START_TIME_INDEX", "178"))
+end_time_idx = int(os.environ.get("END_TIME_INDEX", "180"))
+OT_results = fit_and_evaluate(recsys_trainer, start_time_index=start_time_idx, end_time_index=end_time_idx, input_dir=OUTPUT_DIR)
 
 
 # #### Visualize the average of metrics over time
@@ -223,7 +230,7 @@ from merlin.table.conversions import convert_col
 # In[14]:
 
 
-df = cudf.read_parquet(os.path.join(INPUT_DATA_DIR, "./preproc_sessions_by_day/178/train.parquet"), columns=model.input_schema.column_names)
+df = cudf.read_parquet(os.path.join(INPUT_DATA_DIR, f"preproc_sessions_by_day/{start_time_idx}/train.parquet"), columns=model.input_schema.column_names)
 table = TensorTable.from_df(df.iloc[:100])
 for column in table.columns:
     table[column] = convert_col(table[column], TorchColumn)
@@ -235,7 +242,8 @@ model_input_dict = table.to_dict()
 # In[15]:
 
 
-model.top_k = 20
+topk = 20
+model.top_k = topk
 
 
 # Let us now trace the model.

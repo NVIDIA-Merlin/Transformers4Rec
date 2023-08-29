@@ -118,7 +118,28 @@
 
 
 <div class="viewcode-block" id="BlockBase"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.BlockBase">[docs]</a><span class="k">class</span> <span class="nc">BlockBase</span><span class="p">(</span><span class="n">torch_utils</span><span class="o">.</span><span class="n">OutputSizeMixin</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A subclass of PyTorch&#39;s torch.nn.Module, providing additional functionality</span>
+<span class="sd">    for dealing with automatic setting of input/output dimensions of neural networks layers.</span>
+<span class="sd">    Specifically, It implements the &#39;OutputSizeMixin&#39; for managing output sizes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="BlockBase.to_model"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.BlockBase.to_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prediction_task_or_head</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts the BlockBase instance into a T4Rec model by attaching it to</span>
+<span class="sd">        attaching a &#39;Head&#39; or &#39;PredictionTask&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        prediction_task_or_head : Union[PredictionTask, Head]</span>
+<span class="sd">            A PredictionTask or Head instance to attach to this block.</span>
+<span class="sd">        inputs :InputBlock, optional</span>
+<span class="sd">            The input block representing input features.</span>
+<span class="sd">            By default None</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If prediction_task_or_head is neither a Head nor a PredictionTask.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">..model.base</span> <span class="kn">import</span> <span class="n">Head</span><span class="p">,</span> <span class="n">Model</span><span class="p">,</span> <span class="n">PredictionTask</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prediction_task_or_head</span><span class="p">,</span> <span class="n">PredictionTask</span><span class="p">):</span>
@@ -134,6 +155,15 @@
         <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BlockBase.as_tabular"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.BlockBase.as_tabular">[docs]</a>    <span class="k">def</span> <span class="nf">as_tabular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts the output of the block into a dictionary, keyed by the</span>
+<span class="sd">        provided name</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            The output name, if not provided, uses the name of the block class.</span>
+<span class="sd">            by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="n">AsTabular</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
@@ -143,6 +173,18 @@
 
 
 <div class="viewcode-block" id="Block"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.Block">[docs]</a><span class="k">class</span> <span class="nc">Block</span><span class="p">(</span><span class="n">BlockBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a PyTorch module, allowing it to be used as a block in a T4Rec model.</span>
+<span class="sd">    It carries the module and its expected output size.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    module: torch.nn.Module</span>
+<span class="sd">        The PyTorch module to be wrapped in this block.</span>
+<span class="sd">    output_size: Union[List[int], torch.Size]</span>
+<span class="sd">        The expected output size of the module.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">output_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">]):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
@@ -152,6 +194,20 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Block.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.Block.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the output size of the tensor(s) returned by the forward pass,</span>
+<span class="sd">        given the input size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_size:  Union[List[int], torch.Size]</span>
+<span class="sd">            The size of the input tensor(s) to the module.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Union[List[int], torch.Size]</span>
+<span class="sd">            The size of the output from the module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">batch_size</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">calculate_batch_size_from_input_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span>
 
@@ -161,7 +217,21 @@
 
 
 <div class="viewcode-block" id="SequentialBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock">[docs]</a><span class="k">class</span> <span class="nc">SequentialBlock</span><span class="p">(</span><span class="n">BlockBase</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">output_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extends the module torch.nn.Sequential. It&#39;s used for creating</span>
+<span class="sd">    a sequence of layers or blocks in a T4Rec model. The modules</span>
+<span class="sd">    will be applied to inputs in the order they are passed in the constructor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    *args:</span>
+<span class="sd">        The list of PyTorch modules.</span>
+<span class="sd">    output_size : Union[List[int], torch.Size], optional</span>
+<span class="sd">        The expected output size from the last layer in the sequential block</span>
+<span class="sd">        By default None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">output_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">transformers4rec.torch</span> <span class="kn">import</span> <span class="n">TabularSequenceFeatures</span><span class="p">,</span> <span class="n">TransformerBlock</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">TabularSequenceFeatures</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span>
@@ -182,12 +252,12 @@
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">OrderedDict</span><span class="p">):</span>
             <span class="n">last</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">add_module_and_maybe_build</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
-                <span class="n">last</span> <span class="o">=</span> <span class="n">module</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>  <span class="c1"># type: ignore</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_module_and_maybe_build</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                <span class="n">last</span> <span class="o">=</span> <span class="n">module</span>  <span class="c1"># type: ignore</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
             <span class="n">last</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
                 <span class="n">last</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_module_and_maybe_build</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="n">module</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
@@ -201,6 +271,18 @@
             <span class="k">return</span> <span class="n">first</span>
 
 <div class="viewcode-block" id="SequentialBlock.add_module"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock.add_module">[docs]</a>    <span class="k">def</span> <span class="nf">add_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Module</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a PyTorch module to the sequential block. If a list of strings is provided,</span>
+<span class="sd">        a `FilterFeatures` block gets added to the sequential block.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            The name of the child module. The child module can be accessed</span>
+<span class="sd">            from this module using the given name.</span>
+<span class="sd">        module : Optional[Union[List[str], Module]]</span>
+<span class="sd">            The child module to be added to the module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="n">FilterFeatures</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -208,6 +290,19 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SequentialBlock.add_module_and_maybe_build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock.add_module_and_maybe_build">[docs]</a>    <span class="k">def</span> <span class="nf">add_module_and_maybe_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if a module needs to be built and adds it to the sequential block.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            The name of the child module.</span>
+<span class="sd">        module : torch.nn.Module</span>
+<span class="sd">            The child module to be added to the sequential block.</span>
+<span class="sd">        parent : torch.nn.Module</span>
+<span class="sd">            The parent module.</span>
+<span class="sd">        idx : int</span>
+<span class="sd">            The index of the current module in the sequential block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check if module needs to be built</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="s2">&quot;output_size&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
             <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">output_size</span><span class="p">())</span>
@@ -227,8 +322,18 @@
         <span class="k">return</span> <span class="n">right_shift_block</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SequentialBlock.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="c1"># from transformers4rec.torch import TabularSequenceFeatures</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies the module&#39;s layers sequentially to the input block.</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input : tensor</span>
+<span class="sd">            The input to the block.</span>
+<span class="sd">        training : bool, optional</span>
+<span class="sd">            Whether the block is in training mode. The default is False.</span>
+<span class="sd">        testing : bool, optional</span>
+<span class="sd">            Whether the block is in testing mode. The default is False.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">filtered_kwargs</span> <span class="o">=</span> <span class="n">filter_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">cascade_kwargs_if_possible</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -245,6 +350,20 @@
         <span class="k">return</span> <span class="nb">input</span></div>
 
 <div class="viewcode-block" id="SequentialBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Builds the layers of the sequential block given the input size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_size : Union[List[int], torch.Size]</span>
+<span class="sd">            The size of the input tensor(s).</span>
+<span class="sd">        schema : Schema, optional</span>
+<span class="sd">            The schema of the inputs features, by default None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SequentialBlock</span>
+<span class="sd">            The built sequential block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">output_size</span> <span class="o">=</span> <span class="n">input_size</span>
         <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">):</span>
@@ -255,6 +374,15 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">SequentialBlock</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SequentialBlock.as_tabular"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock.as_tabular">[docs]</a>    <span class="k">def</span> <span class="nf">as_tabular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts the output of the block into a dictionary, keyed by the</span>
+<span class="sd">        provided name</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            The output name, if not provided, uses the name of the block class.</span>
+<span class="sd">            by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">transformers4rec.torch</span> <span class="kn">import</span> <span class="n">AsTabular</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
@@ -268,6 +396,20 @@
         <span class="k">return</span> <span class="n">merge_tabular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SequentialBlock.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the output size of the tensor(s) returned by the forward pass,</span>
+<span class="sd">        given the input size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_size:  Union[List[int], torch.Size]</span>
+<span class="sd">            The size of the input tensor(s) to the module.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Union[List[int], torch.Size]</span>
+<span class="sd">            The size of the output from the module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_static_output_size</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_static_output_size</span>
 
@@ -300,10 +442,26 @@
 
 
 <div class="viewcode-block" id="build_blocks"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.build_blocks">[docs]</a><span class="k">def</span> <span class="nf">build_blocks</span><span class="p">(</span><span class="o">*</span><span class="n">modules</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds a SequentialBlock from a list of PyTorch modules.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    *modules : List[torch.nn.Module]</span>
+<span class="sd">        List containing PyTorch modules.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        A SequentialBlock instance created from the provided modules.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">SequentialBlock</span><span class="p">(</span><span class="o">*</span><span class="n">modules</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="BuildableBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.BuildableBlock">[docs]</a><span class="k">class</span> <span class="nc">BuildableBlock</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for buildable blocks.</span>
+<span class="sd">    Subclasses of BuildableBlock must implement the `build` method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="BuildableBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.BuildableBlock.build">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BlockBase</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
@@ -398,12 +556,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../../../v23.05.00/index.html">v23.05.00</a></dd>
       <dd><a href="../../../../../v23.06.00/index.html">v23.06.00</a></dd>
+      <dd><a href="../../../../../v23.08.00/index.html">v23.08.00</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

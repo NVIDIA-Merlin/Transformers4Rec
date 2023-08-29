@@ -103,13 +103,55 @@
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">transformers</span>
+<span class="kn">from</span> <span class="nn">merlin.models.utils.doc_utils</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
 <span class="kn">from</span> <span class="nn">merlin.models.utils.registry</span> <span class="kn">import</span> <span class="n">Registry</span>
 
 <span class="n">transformer_registry</span><span class="p">:</span> <span class="n">Registry</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;transformers&quot;</span><span class="p">)</span>
 
 
+<span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;        </span>
+<span class="s2">        d_model: int</span>
+<span class="s2">            The  hidden dimension of the transformer layer.</span>
+<span class="s2">        n_head: int</span>
+<span class="s2">            The number of attention heads in each transformer layer.</span>
+<span class="s2">        n_layer: int</span>
+<span class="s2">            The number of transformer layers to stack.</span>
+<span class="s2">        total_seq_length: int</span>
+<span class="s2">            The maximum sequence length.</span>
+<span class="s2">        hidden_act: str, optional</span>
+<span class="s2">            The activation function in the hidden layers.</span>
+<span class="s2">            By default &#39;gelu&#39;</span>
+<span class="s2">        initializer_range: float, optional</span>
+<span class="s2">            The standard deviation of the `truncated_normal_initializer`</span>
+<span class="s2">            for initializing all transformer&#39;s weights parameters.</span>
+<span class="s2">            By default 0.01</span>
+<span class="s2">        layer_norm_eps: float, optional</span>
+<span class="s2">            The epsilon used by the layer normalization layers.</span>
+<span class="s2">            By default 0.03</span>
+<span class="s2">        dropout: float, optional</span>
+<span class="s2">            The dropout probability. By default 0.3</span>
+<span class="s2">        pad_token: int, optional</span>
+<span class="s2">            The padding token ID. By default 0</span>
+<span class="s2">        log_attention_weights: bool, optional</span>
+<span class="s2">            Whether to log attention weights. By default False</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
 <div class="viewcode-block" id="T4RecConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig">[docs]</a><span class="k">class</span> <span class="nc">T4RecConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class responsible for setting the configuration of the transformers class</span>
+<span class="sd">    from Hugging Face and returning the corresponding T4Rec model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="T4RecConfig.to_huggingface_torch_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_torch_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_huggingface_torch_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate a Hugging Face transformer model based on</span>
+<span class="sd">        the configuration parameters of the class.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        transformers.PreTrainedModel</span>
+<span class="sd">            The Hugging Face transformer model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">model_cls</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">MODEL_MAPPING</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transformers_config_cls</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">model_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
@@ -123,6 +165,37 @@
         <span class="n">loss_reduction</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Links the Hugging Face transformer model to the given input block and prediction tasks,</span>
+<span class="sd">        and returns a T4Rec model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_features: torch4rec.TabularSequenceFeatures</span>
+<span class="sd">            The sequential block that represents the input features and</span>
+<span class="sd">            defines the masking strategy for training and evaluation.</span>
+<span class="sd">        prediction_task: torch4rec.PredictionTask</span>
+<span class="sd">            One or multiple prediction tasks.</span>
+<span class="sd">        task_blocks: list, optional</span>
+<span class="sd">            List of task-specific blocks that we apply on top of the HF transformer&#39;s output.</span>
+<span class="sd">        task_weights: list, optional</span>
+<span class="sd">            List of the weights to use for combining the tasks losses.</span>
+<span class="sd">        loss_reduction: str, optional</span>
+<span class="sd">            The reduction to apply to the prediction losses, possible values are:</span>
+<span class="sd">                &#39;none&#39;: no reduction will be applied,</span>
+<span class="sd">                &#39;mean&#39;: the weighted mean of the output is taken,</span>
+<span class="sd">                &#39;sum&#39;: the output will be summed.</span>
+<span class="sd">            By default: &#39;mean&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch4rec.Model</span>
+<span class="sd">            The T4Rec torch model.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If input block or prediction task is of the wrong type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">torch4rec</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">torch4rec</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="p">):</span>
@@ -156,7 +229,12 @@
 
 <div class="viewcode-block" id="ReformerConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ReformerConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;reformer&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ReformerConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">ReformerConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="ReformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ReformerConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers.ReformerConfig from Hugging Face.</span>
+<span class="sd">    It handles configuration for Reformer layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ReformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ReformerConfig.build">[docs]</a>    <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -172,6 +250,21 @@
         <span class="n">axial_pos_shape_first_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of ReformerConfig with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+<span class="sd">        axial_pos_shape_first_dim: int, optional</span>
+<span class="sd">            The first dimension of the axial position encodings.</span>
+<span class="sd">            During training, the product of the position dims has to be equal to the sequence length.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ReformerConfig</span>
+<span class="sd">            An instance of ReformerConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
         <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
@@ -203,7 +296,12 @@
 
 
 <div class="viewcode-block" id="GPT2Config"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.GPT2Config">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;gtp2&quot;</span><span class="p">)</span>
+<span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">GPT2Config</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">GPT2Config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers.GPT2Config from Hugging Face.</span>
+<span class="sd">    It handles configuration for GPT2 layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="GPT2Config.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.GPT2Config.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
@@ -219,6 +317,18 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of GPT2Config with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        GPT2Config</span>
+<span class="sd">            An instance of GPT2Config.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">n_embd</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">n_inner</span><span class="o">=</span><span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
@@ -240,7 +350,12 @@
 
 <div class="viewcode-block" id="LongformerConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.LongformerConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;longformer&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">LongformerConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">LongformerConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="LongformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.LongformerConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers.LongformerConfig from Hugging Face.</span>
+<span class="sd">    It handles configuration for LongformerConfig layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LongformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.LongformerConfig.build">[docs]</a>    <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -255,6 +370,18 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of LongformerConfig with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        LongformerConfig</span>
+<span class="sd">            An instance of LongformerConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
         <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
@@ -275,7 +402,12 @@
 
 <div class="viewcode-block" id="ElectraConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ElectraConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;electra&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ElectraConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">ElectraConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="ElectraConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ElectraConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers.ElectraConfig from Hugging Face.</span>
+<span class="sd">    It handles configuration for ElectraConfig layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ElectraConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ElectraConfig.build">[docs]</a>    <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -290,6 +422,18 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of ElectraConfig with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ElectraConfig</span>
+<span class="sd">            An instance of ElectraConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
         <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
@@ -312,7 +456,12 @@
 
 <div class="viewcode-block" id="AlbertConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.AlbertConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;albert&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">AlbertConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AlbertConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="AlbertConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.AlbertConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers.AlbertConfig from Hugging Face.</span>
+<span class="sd">    It handles configuration for AlbertConfig layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AlbertConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.AlbertConfig.build">[docs]</a>    <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -327,6 +476,18 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of AlbertConfig with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        AlbertConfig</span>
+<span class="sd">            An instance of AlbertConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
         <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
@@ -348,8 +509,14 @@
 
 
 <div class="viewcode-block" id="XLNetConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.XLNetConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;xlnet&quot;</span><span class="p">)</span>
+<span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">XLNetConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="XLNetConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.XLNetConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers.XLNetConfig from Hugging Face.</span>
+<span class="sd">    It handles configuration for XLNetConfig layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="XLNetConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.XLNetConfig.build">[docs]</a>    <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -366,6 +533,25 @@
         <span class="n">mem_len</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of XLNetConfig with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+<span class="sd">        mem_len: int,</span>
+<span class="sd">            The number of tokens to be cached. Pre-computed key/value pairs</span>
+<span class="sd">            from a previous forward pass are stored and won&#39;t be re-computed.</span>
+<span class="sd">            This parameter is especially useful for long sequence modeling where</span>
+<span class="sd">            different batches may truncate the entire sequence.</span>
+<span class="sd">            Tasks like user-aware recommendation could benefit from this feature.</span>
+<span class="sd">            By default, this parameter is set to 1, which means no caching is used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        XLNetConfig</span>
+<span class="sd">            An instance of XLNetConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">d_inner</span><span class="o">=</span><span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
@@ -386,7 +572,12 @@
 
 <div class="viewcode-block" id="BertConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.BertConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;bert&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">BertConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">BertConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="BertConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.BertConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers.BertConfig from Hugging Face.</span>
+<span class="sd">    It handles configuration for BertConfig layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BertConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.BertConfig.build">[docs]</a>    <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -401,6 +592,18 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of BertConfig with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        BertConfig</span>
+<span class="sd">            An instance of BertConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
         <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
@@ -421,7 +624,12 @@
 
 <div class="viewcode-block" id="RobertaConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.RobertaConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;roberta&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">RobertaConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">RobertaConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="RobertaConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.RobertaConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers.RobertaConfig from Hugging Face.</span>
+<span class="sd">    It handles configuration for RobertaConfig layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RobertaConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.RobertaConfig.build">[docs]</a>    <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -436,6 +644,18 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of RobertaConfig with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        RobertaConfig</span>
+<span class="sd">            An instance of RobertaConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
         <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
@@ -456,7 +676,12 @@
 
 <div class="viewcode-block" id="TransfoXLConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.TransfoXLConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;transfo-xl&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TransfoXLConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">TransfoXLConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="TransfoXLConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.TransfoXLConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass of T4RecConfig and transformers. TransfoXLConfig from Hugging Face.</span>
+<span class="sd">    It handles configuration for TransfoXLConfig layers in the context of T4Rec models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TransfoXLConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.TransfoXLConfig.build">[docs]</a>    <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">transformer_cfg_parameters</span><span class="o">=</span><span class="n">TRANSFORMER_CONFIG_PARAMETER_DOCSTRING</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -471,6 +696,18 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of TransfoXLConfig with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {transformer_cfg_parameters}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TransfoXLConfig</span>
+<span class="sd">            An instance of TransfoXLConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">d_embed</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
@@ -522,12 +759,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../../v23.05.00/index.html">v23.05.00</a></dd>
       <dd><a href="../../../../v23.06.00/index.html">v23.06.00</a></dd>
+      <dd><a href="../../../../v23.08.00/index.html">v23.08.00</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

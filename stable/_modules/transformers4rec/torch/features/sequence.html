@@ -203,7 +203,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">continuous_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">categorical_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">text_embedding_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pretrained_embedding_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">projection_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BlockOrModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">masking</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MaskSequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -215,7 +215,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">continuous_module</span><span class="p">,</span>
             <span class="n">categorical_module</span><span class="p">,</span>
-            <span class="n">text_embedding_module</span><span class="p">,</span>
+            <span class="n">pretrained_embedding_module</span><span class="p">,</span>
             <span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span>
             <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span>
             <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span>
@@ -231,6 +231,7 @@
         <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
         <span class="n">continuous_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TagsType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tags</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">,),</span>
         <span class="n">categorical_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TagsType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tags</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,),</span>
+        <span class="n">pretrained_embeddings_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TagsType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tags</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">EMBEDDING</span><span class="p">,),</span>
         <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">automatic_build</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">max_sequence_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -282,6 +283,7 @@
             <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
             <span class="n">continuous_tags</span><span class="o">=</span><span class="n">continuous_tags</span><span class="p">,</span>
             <span class="n">categorical_tags</span><span class="o">=</span><span class="n">categorical_tags</span><span class="p">,</span>
+            <span class="n">pretrained_embeddings_tags</span><span class="o">=</span><span class="n">pretrained_embeddings_tags</span><span class="p">,</span>
             <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span>
             <span class="n">automatic_build</span><span class="o">=</span><span class="n">automatic_build</span><span class="p">,</span>
             <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
@@ -415,12 +417,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../../../v23.05.00/index.html">v23.05.00</a></dd>
       <dd><a href="../../../../../v23.06.00/index.html">v23.06.00</a></dd>
+      <dd><a href="../../../../../v23.08.00/index.html">v23.08.00</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

@@ -186,7 +186,20 @@
 
 
 <div class="viewcode-block" id="ElementwiseFeatureAggregation"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseFeatureAggregation">[docs]</a><span class="k">class</span> <span class="nc">ElementwiseFeatureAggregation</span><span class="p">(</span><span class="n">TabularAggregation</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">_check_input_shapes_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for aggregation methods that aggregates</span>
+<span class="sd">    features element-wise.</span>
+<span class="sd">    It implements two check methods to ensure inputs have the correct shape.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_check_input_shapes_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the shapes of all inputs are equal.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : TabularData</span>
+<span class="sd">            Dictionary of tensors.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">all_input_shapes_equal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">()]))</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">all_input_shapes_equal</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -195,6 +208,14 @@
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_inputs_last_dim_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_sizes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the last dimensions of all inputs are equal.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs_sizes : dict[str, Union[List[int], torch.Size]]</span>
+<span class="sd">            A dictionary containing the sizes of the inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">all_input_last_dim_equal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs_sizes</span><span class="o">.</span><span class="n">values</span><span class="p">()]))</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">all_input_last_dim_equal</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -290,12 +311,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../../../v23.05.00/index.html">v23.05.00</a></dd>
       <dd><a href="../../../../../v23.06.00/index.html">v23.06.00</a></dd>
+      <dd><a href="../../../../../v23.08.00/index.html">v23.08.00</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

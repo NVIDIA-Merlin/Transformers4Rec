@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.torch.utils.data_utils &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/_modules/transformers4rec/torch/utils/data_utils.html" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.torch.utils.data_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.torch.utils.data_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">merlin.dataloader.torch</span> <span class="kn">import</span> <span class="n">Loader</span>
+<span class="kn">from</span> <span class="nn">merlin.models.utils.misc_utils</span> <span class="kn">import</span> <span class="n">validate_dataset</span>
+<span class="kn">from</span> <span class="nn">merlin.models.utils.registry</span> <span class="kn">import</span> <span class="n">Registry</span>
+<span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Tags</span>
+<span class="kn">from</span> <span class="nn">merlin.schema.io.tensorflow_metadata</span> <span class="kn">import</span> <span class="n">TensorflowMetadata</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span> <span class="k">as</span> <span class="n">PyTorchDataLoader</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">IterableDataset</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.padding</span> <span class="kn">import</span> <span class="n">pad_batch</span>
+
+<span class="kn">from</span> <span class="nn">...utils</span> <span class="kn">import</span> <span class="n">dependencies</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">dataloader_registry</span><span class="p">:</span> <span class="n">Registry</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;torch.dataloader_loader&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="T4RecDataLoader"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.T4RecDataLoader">[docs]</a><span class="k">class</span> <span class="nc">T4RecDataLoader</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base Helper class to build dataloader from the schema with properties</span>
+<span class="sd">    required by T4Rec Trainer class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="T4RecDataLoader.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.T4RecDataLoader.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">paths_or_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="c1"># Build the data-loader from the schema</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="T4RecDataLoader.set_dataset"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.T4RecDataLoader.set_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths_or_dataset</span><span class="p">):</span>
+        <span class="c1"># set the dataset from paths</span>
+        <span class="c1"># or from provided dataset</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="T4RecDataLoader.parse"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.T4RecDataLoader.parse">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">class_or_str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dataloader_registry</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">class_or_str</span><span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="n">dependencies</span><span class="o">.</span><span class="n">is_pyarrow_available</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">pyarrow.parquet</span> <span class="k">as</span> <span class="nn">pq</span>
+
+<div class="viewcode-block" id="PyarrowDataLoader"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader">[docs]</a>    <span class="nd">@dataloader_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;pyarrow_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;pyarrow&quot;</span><span class="p">)</span>
+    <span class="k">class</span> <span class="nc">PyarrowDataLoader</span><span class="p">(</span><span class="n">T4RecDataLoader</span><span class="p">,</span> <span class="n">PyTorchDataLoader</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">paths_or_dataset</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="p">,</span>
+            <span class="n">cols_to_read</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">target_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">shuffle_buffer_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">T4RecDataLoader</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The `pyarrow` data loader is deprecated and should be replaced &quot;</span>
+                <span class="s2">&quot;by `merlin_dataloader`&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">paths_or_dataset</span> <span class="o">=</span> <span class="n">paths_or_dataset</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span> <span class="o">=</span> <span class="n">shuffle</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_buffer_size</span> <span class="o">=</span> <span class="n">shuffle_buffer_size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="n">num_workers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pin_memory</span> <span class="o">=</span> <span class="n">pin_memory</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="n">max_sequence_length</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span> <span class="o">=</span> <span class="n">drop_last</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_dataset</span><span class="p">(</span><span class="n">cols_to_read</span><span class="o">=</span><span class="n">cols_to_read</span><span class="p">,</span> <span class="n">target_names</span><span class="o">=</span><span class="n">target_names</span><span class="p">)</span>
+
+            <span class="n">PyTorchDataLoader</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">drop_last</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span>
+                <span class="n">pin_memory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pin_memory</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># set _batch_size attribute needed by HF trainer</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+
+<div class="viewcode-block" id="PyarrowDataLoader.set_dataset"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.set_dataset">[docs]</a>        <span class="k">def</span> <span class="nf">set_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cols_to_read</span><span class="p">,</span> <span class="n">target_names</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            set the Parquet dataset</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            cols_to_read: str</span>
+<span class="sd">                The list of features names to load</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paths_or_dataset</span><span class="p">,</span> <span class="n">ParquetDataset</span><span class="p">):</span>
+                <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paths_or_dataset</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">ParquetDataset</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">paths_or_dataset</span><span class="p">,</span>
+                <span class="n">cols_to_read</span><span class="p">,</span>
+                <span class="n">seq_features_len_pad_trim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_sequence_length</span><span class="p">,</span>
+                <span class="n">target_names</span><span class="o">=</span><span class="n">target_names</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_buffer_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">dataset</span> <span class="o">=</span> <span class="n">ShuffleDataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_buffer_size</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span></div>
+
+<div class="viewcode-block" id="PyarrowDataLoader.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.from_schema">[docs]</a>        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="p">,</span>
+            <span class="n">schema</span><span class="p">,</span>
+            <span class="n">paths_or_dataset</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="p">,</span>
+            <span class="n">continuous_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">categorical_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">shuffle_buffer_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Instantiates ``PyarrowDataLoader`` from a ``DatasetSchema``.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            schema: DatasetSchema</span>
+<span class="sd">                Dataset schema</span>
+<span class="sd">            paths_or_dataset: Union[str, Dataset]</span>
+<span class="sd">                Path to paquet data of Dataset object.</span>
+<span class="sd">            batch_size: int</span>
+<span class="sd">                batch size of Dataloader.</span>
+<span class="sd">            max_sequence_length: int</span>
+<span class="sd">                The maximum length of list features.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="n">categorical_features</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">categorical_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+            <span class="p">)</span>
+            <span class="n">continuous_features</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">continuous_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+            <span class="p">)</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">TARGET</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+
+            <span class="n">cols_to_read</span> <span class="o">=</span> <span class="n">categorical_features</span> <span class="o">+</span> <span class="n">continuous_features</span> <span class="o">+</span> <span class="n">targets</span>
+
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+                <span class="n">paths_or_dataset</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">max_sequence_length</span><span class="p">,</span>
+                <span class="n">cols_to_read</span><span class="o">=</span><span class="n">cols_to_read</span><span class="p">,</span>
+                <span class="n">target_names</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+                <span class="n">shuffle_buffer_size</span><span class="o">=</span><span class="n">shuffle_buffer_size</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="DLDataLoader"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader">[docs]</a><span class="k">class</span> <span class="nc">DLDataLoader</span><span class="p">(</span><span class="n">PyTorchDataLoader</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is an extension of the torch dataloader.</span>
+<span class="sd">    It is required to support the FastAI framework.</span>
+
+<span class="sd">    Setting the batch size directly to DLDataLoader makes it 3x slower.</span>
+<span class="sd">    So we set as an alternative attribute and use it within</span>
+<span class="sd">    T4Rec Trainer during evaluation</span>
+<span class="sd">    # TODO : run experiments with new merlin-dataloader</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;batch_size&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MerlinDataLoader"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader">[docs]</a><span class="nd">@dataloader_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span>
+    <span class="s2">&quot;merlin_dataloader&quot;</span><span class="p">,</span> <span class="s2">&quot;merlin&quot;</span><span class="p">,</span> <span class="s2">&quot;nvtabular_dataloader&quot;</span><span class="p">,</span> <span class="s2">&quot;nvtabular&quot;</span>
+<span class="p">)</span>
+<span class="k">class</span> <span class="nc">MerlinDataLoader</span><span class="p">(</span><span class="n">T4RecDataLoader</span><span class="p">,</span> <span class="n">DLDataLoader</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class extends the [Merlin data loader]</span>
+<span class="sd">    (https://github.com/NVIDIA-Merlin/dataloader/blob/stable/merlin/dataloader/torch.py).</span>
+<span class="sd">    The data input requires a merlin.io.Dataset or a path to the data files.</span>
+<span class="sd">    It also sets the dataset&#39;s schema with the necessary properties to prepare the input</span>
+<span class="sd">    list features as dense tensors (i.e. padded to the specified `max_sequence_length`).</span>
+<span class="sd">    The dense representation is required by the Transformers4Rec input modules.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    paths_or_dataset: Union[str, merlin.io.Dataset]</span>
+<span class="sd">        The dataset to load.</span>
+<span class="sd">    batch_size: int</span>
+<span class="sd">        The size of each batch to supply to the model.</span>
+<span class="sd">    max_sequence_length: int</span>
+<span class="sd">        The maximum sequence length to use for padding list columns.</span>
+<span class="sd">        By default, `0` is used as the padding index.</span>
+<span class="sd">    cats : List[str], optional</span>
+<span class="sd">        The list of categorical columns in the dataset.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    conts: List[str], optional</span>
+<span class="sd">        The list of continuous columns in the dataset.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    labels : List[str], optional</span>
+<span class="sd">        The list of label columns in the dataset.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    lists : List[str], optional</span>
+<span class="sd">        The list of sequential columns in the dataset.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    shuffle : bool, optional</span>
+<span class="sd">        Enable/disable shuffling of dataset.</span>
+<span class="sd">        By default False.</span>
+<span class="sd">    parts_per_chunk : int, optional</span>
+<span class="sd">        The number of partitions from the iterator, an Merlin Dataset,</span>
+<span class="sd">        to concatenate into a &quot;chunk&quot;. By default 1.</span>
+<span class="sd">    device : int, optional</span>
+<span class="sd">        The device id of the selected GPU</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    drop_last: bool, optional</span>
+<span class="sd">        Whether or not to drop the last batch in an epoch. This is useful when you need to</span>
+<span class="sd">        guarantee that each batch contains exactly `batch_size` rows - since the last batch</span>
+<span class="sd">        will usually contain fewer rows.</span>
+<span class="sd">    seed_fn: callable</span>
+<span class="sd">        Function used to initialize random state</span>
+<span class="sd">    parts_per_chunk: int</span>
+<span class="sd">        Number of dataset partitions with size dictated by `buffer_size`</span>
+<span class="sd">        to load and concatenate asynchronously. More partitions leads to</span>
+<span class="sd">        better epoch-level randomness but can negatively impact throughput</span>
+<span class="sd">    global_size: int, optional</span>
+<span class="sd">        When doing distributed training, this indicates the number of total processes that are</span>
+<span class="sd">        training the model.</span>
+<span class="sd">    global_rank: int, optional</span>
+<span class="sd">        When doing distributed training, this indicates the local rank for the current process.</span>
+<span class="sd">    schema: Schema, optional</span>
+<span class="sd">         The `Schema` with the input features.</span>
+<span class="sd">    reader_kwargs:</span>
+<span class="sd">        Extra arguments to pass to the merlin.io.Dataset object, when the path to data files</span>
+<span class="sd">        is provided in `paths_or_dataset` argument.</span>
+<span class="sd">    row_groups_per_part: bool, optional</span>
+<span class="sd">        If true, preserve the group partitions when loading the dataset from parquet files.</span>
+<span class="sd">    collate_fn: Callable, optional</span>
+<span class="sd">        A processing function to collect and prepare the list samples</span>
+<span class="sd">        (tuple of (input, target) Tensor(s)) returned by the Merlin DataLoader.</span>
+<span class="sd">    transforms: List[merlin.dag.BaseOperator]</span>
+<span class="sd">        A list of operators that the Merlin dataloader applies on top of the loaded</span>
+<span class="sd">        batch, which is a tuple of input and target tensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">paths_or_dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">max_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">conts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">lists</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">collate_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">buffer_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">reader_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">parts_per_chunk</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">global_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">global_rank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">row_groups_per_part</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">transforms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">T4RecDataLoader</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">paths_or_dataset</span> <span class="o">=</span> <span class="n">paths_or_dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span> <span class="o">=</span> <span class="n">shuffle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="n">max_sequence_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span> <span class="o">=</span> <span class="n">drop_last</span>
+
+        <span class="n">reader_kwargs</span> <span class="o">=</span> <span class="n">reader_kwargs</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">reader_kwargs</span><span class="p">[</span><span class="s2">&quot;row_groups_per_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_groups_per_part</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_dataset</span><span class="p">(</span><span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">global_rank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">npartitions</span> <span class="o">&lt;</span> <span class="n">global_size</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;UserWarning: User is advised to repartition the parquet file before training &quot;</span>
+                <span class="s2">&quot;so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning &quot;</span>
+                <span class="s2">&quot;eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas &quot;</span>
+                <span class="s2">&quot;or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf &quot;</span>
+                <span class="s2">&quot;so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible &quot;</span>
+                <span class="s2">&quot;by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">npartitions</span><span class="o">=</span><span class="n">global_size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">global_rank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">npartitions</span> <span class="o">%</span> <span class="n">global_size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;UserWarning: User is advised to set the number of partitions&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">npartitions</span><span class="si">}</span><span class="s2">) divisible by the number of available&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; GPUs (</span><span class="si">{</span><span class="n">global_size</span><span class="si">}</span><span class="s2">). This will divide the work equally among GPUs&quot;</span>
+                <span class="s2">&quot; for DDP training and ensure optimal performance.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augment_schema</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
+            <span class="n">cats</span><span class="o">=</span><span class="n">cats</span><span class="p">,</span>
+            <span class="n">conts</span><span class="o">=</span><span class="n">conts</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">lists</span><span class="o">=</span><span class="n">lists</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="p">,</span>
+            <span class="n">seed_fn</span><span class="o">=</span><span class="n">seed_fn</span><span class="p">,</span>
+            <span class="n">parts_per_chunk</span><span class="o">=</span><span class="n">parts_per_chunk</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">global_size</span><span class="o">=</span><span class="n">global_size</span><span class="p">,</span>
+            <span class="n">global_rank</span><span class="o">=</span><span class="n">global_rank</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
+            <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_sequence_length</span><span class="p">:</span>
+            <span class="c1"># Apply padding</span>
+            <span class="n">output_schema</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">output_schema</span>
+            <span class="n">sparse_feats</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">output_schema</span> <span class="k">if</span> <span class="n">Tags</span><span class="o">.</span><span class="n">LIST</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">tags</span><span class="p">]</span>
+            <span class="n">sparse_max</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">max_sequence_length</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sparse_feats</span><span class="p">}</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_pad_fn</span><span class="p">(</span><span class="n">sparse_max</span><span class="p">))</span>
+
+        <span class="n">DLDataLoader</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">loader</span><span class="p">,</span>
+            <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="n">max_sequence_length</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_pad_fn</span><span class="p">(</span><span class="n">padding_lengths</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">pad_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+            <span class="n">new_x</span> <span class="o">=</span> <span class="n">pad_batch</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">padding_lengths</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">new_y</span> <span class="o">=</span> <span class="n">pad_batch</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">padding_lengths</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_y</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="k">return</span> <span class="n">new_x</span><span class="p">,</span> <span class="n">new_y</span>
+
+        <span class="k">return</span> <span class="n">pad_fn</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_augment_schema</span><span class="p">(</span>
+        <span class="n">schema</span><span class="p">,</span>
+        <span class="n">cats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">conts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">lists</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">cats</span> <span class="o">=</span> <span class="n">cats</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">conts</span> <span class="o">=</span> <span class="n">conts</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">[]</span>
+
+        <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span><span class="n">conts</span> <span class="o">+</span> <span class="n">cats</span> <span class="o">+</span> <span class="n">labels</span> <span class="o">+</span> <span class="n">lists</span><span class="p">)</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">labels</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+            <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">TARGET</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cats</span><span class="p">:</span>
+            <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">conts</span><span class="p">:</span>
+            <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">lists</span><span class="p">:</span>
+            <span class="n">schema</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">LIST</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">schema</span>
+
+<div class="viewcode-block" id="MerlinDataLoader.set_dataset"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.set_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">validate_dataset</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">paths_or_dataset</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">buffer_size</span><span class="p">,</span>
+            <span class="n">engine</span><span class="p">,</span>
+            <span class="n">reader_kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">schema</span><span class="p">:</span>
+            <span class="c1"># set the dataset schema based on the provided one to keep all original information</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">Schema</span><span class="p">):</span>
+                <span class="c1"># convert merlin-standardlib schema to merlin-core schema</span>
+                <span class="n">schema</span> <span class="o">=</span> <span class="n">to_core_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+            <span class="n">dataset</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span></div>
+
+<div class="viewcode-block" id="MerlinDataLoader.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
+        <span class="n">paths_or_dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">max_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">continuous_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">categorical_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">list_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">collate_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">buffer_size</span><span class="o">=</span><span class="mf">0.06</span><span class="p">,</span>
+        <span class="n">parts_per_chunk</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">transforms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Instantitates `MerlinDataLoader` from a ``DatasetSchema``.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            schema: DatasetSchema</span>
+<span class="sd">                Dataset schema</span>
+<span class="sd">            paths_or_dataset: Union[str, Dataset]</span>
+<span class="sd">                Path to paquet data of Dataset object.</span>
+<span class="sd">            batch_size: int</span>
+<span class="sd">                batch size of Dataloader.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">categorical_features</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">categorical_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+        <span class="p">)</span>
+        <span class="n">continuous_features</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">continuous_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+        <span class="p">)</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">TARGET</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+        <span class="n">list_features</span> <span class="o">=</span> <span class="n">list_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">LIST</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+        <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span>
+            <span class="n">categorical_features</span> <span class="o">+</span> <span class="n">continuous_features</span> <span class="o">+</span> <span class="n">targets</span> <span class="o">+</span> <span class="n">list_features</span>
+        <span class="p">)</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">paths_or_dataset</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
+            <span class="n">cats</span><span class="o">=</span><span class="n">categorical_features</span><span class="p">,</span>
+            <span class="n">conts</span><span class="o">=</span><span class="n">continuous_features</span><span class="p">,</span>
+            <span class="n">lists</span><span class="o">=</span><span class="n">list_features</span><span class="p">,</span>
+            <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+            <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">,</span>  <span class="c1"># how many batches to load at once</span>
+            <span class="n">parts_per_chunk</span><span class="o">=</span><span class="n">parts_per_chunk</span><span class="p">,</span>
+            <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+            <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">loader</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">output_schema</span></div>
+
+
+<div class="viewcode-block" id="ParquetDataset"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.ParquetDataset">[docs]</a><span class="k">class</span> <span class="nc">ParquetDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parquet_file</span><span class="p">,</span> <span class="n">cols_to_read</span><span class="p">,</span> <span class="n">target_names</span><span class="p">,</span> <span class="n">seq_features_len_pad_trim</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cols_to_read</span> <span class="o">=</span> <span class="n">cols_to_read</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_names</span> <span class="o">=</span> <span class="n">target_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">ParquetDataset</span><span class="p">(</span><span class="n">parquet_file</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cols_to_read</span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_features_len_pad_trim</span> <span class="o">=</span> <span class="n">seq_features_len_pad_trim</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">input_features</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols_to_read</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_names</span><span class="p">))</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">col</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_seq_column_if_needed</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">input_features</span><span class="p">}</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="p">{</span><span class="n">col</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_seq_column_if_needed</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_names</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span>
+
+<div class="viewcode-block" id="ParquetDataset.pad_seq_column_if_needed"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.ParquetDataset.pad_seq_column_if_needed">[docs]</a>    <span class="k">def</span> <span class="nf">pad_seq_column_if_needed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_features_len_pad_trim</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_features_len_pad_trim</span><span class="p">:</span>
+                <span class="n">placeholder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seq_features_len_pad_trim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="n">placeholder</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span> <span class="o">=</span> <span class="n">values</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">placeholder</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)</span> <span class="ow">and</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span> <span class="ow">and</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span></div></div>
+
+
+<div class="viewcode-block" id="ShuffleDataset"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.ShuffleDataset">[docs]</a><span class="k">class</span> <span class="nc">ShuffleDataset</span><span class="p">(</span><span class="n">IterableDataset</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer_size</span> <span class="o">=</span> <span class="n">buffer_size</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[SHUFFLE] INITIALIZING BUFFER_SIZE: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_size</span><span class="p">))</span>
+
+        <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">()</span>
+        <span class="c1"># TODO define The shuffle method for pyarrow dataloader</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="to_core_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.to_core_schema">[docs]</a><span class="k">def</span> <span class="nf">to_core_schema</span><span class="p">(</span><span class="n">t4rec_schema</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">TensorflowMetadata</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">t4rec_schema</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span><span class="o">.</span><span class="n">to_merlin_schema</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v23.08.00
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../v0.1.16/index.html">v0.1.16</a></dd>
+      <dd><a href="../../../../../v23.02.00/index.html">v23.02.00</a></dd>
+      <dd><a href="../../../../../v23.04.00/index.html">v23.04.00</a></dd>
+      <dd><a href="../../../../../v23.05.00/index.html">v23.05.00</a></dd>
+      <dd><a href="../../../../../v23.06.00/index.html">v23.06.00</a></dd>
+      <dd><a href="data_utils.html">v23.08.00</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../main/index.html">main</a></dd>
+      <dd><a href="../../../../../stable/index.html">stable</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

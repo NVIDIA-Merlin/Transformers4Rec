@@ -41,6 +41,8 @@
 # 
 # The dataset is available on [Kaggle](https://www.kaggle.com/chadgostopp/recsys-challenge-2015). You need to download it and copy to the `DATA_FOLDER` path. Note that we are only using the `yoochoose-clicks.dat` file.
 # 
+# Alternatively, you can generate a synthetic dataset with the same columns and dtypes as the `YOOCHOOSE` dataset and a default date range of 5 days. If the environment variable `USE_SYNTHETIC` is set to `True`, the code below will execute the function `generate_synthetic_data` and the rest of the notebook will run on a synthetic dataset.
+# 
 # First, let's start by importing several libraries:
 
 # In[2]:
@@ -49,7 +51,10 @@
 import os
 import glob
 import numpy as np
+import pandas as pd
 import gc
+import calendar
+import datetime
 
 import cudf
 import cupy
@@ -72,43 +77,111 @@ config.CUDA_LOW_OCCUPANCY_WARNINGS = 0
 # In[4]:
 
 
-DATA_FOLDER = "/workspace/data/"
+DATA_FOLDER = os.environ.get("DATA_FOLDER", "/workspace/data")
 FILENAME_PATTERN = 'yoochoose-clicks.dat'
 DATA_PATH = os.path.join(DATA_FOLDER, FILENAME_PATTERN)
 
 OUTPUT_FOLDER = "./yoochoose_transformed"
 OVERWRITE = False
 
+USE_SYNTHETIC = os.environ.get("USE_SYNTHETIC", False)
+
 
 # ## Load and clean raw data
+
+# Execute the cell below if you would like to work with synthetic data. Otherwise you can skip and continue with the next cell.
 
 # In[5]:
 
 
-interactions_df = cudf.read_csv(DATA_PATH, sep=',', 
-                                names=['session_id','timestamp', 'item_id', 'category'], 
-                                dtype=['int', 'datetime64[s]', 'int', 'int'])
+def generate_synthetic_data(
+    start_date: datetime.date, end_date: datetime.date, rows_per_day: int = 10000
+) -> pd.DataFrame:
+    assert end_date > start_date, "end_date must be later than start_date"
 
+    number_of_days = (end_date - start_date).days
+    total_number_of_rows = number_of_days * rows_per_day
 
-# #### Remove repeated interactions within the same session
+    # Generate a long-tail distribution of item interactions. This simulates that some items are
+    # more popular than others.
+    long_tailed_item_distribution = np.clip(
+        np.random.lognormal(3.0, 1.0, total_number_of_rows).astype(np.int64), 1, 50000
+    )
+
+    # generate random item interaction features
+    df = pd.DataFrame(
+        {
+            "session_id": np.random.randint(70000, 80000, total_number_of_rows),
+            "item_id": long_tailed_item_distribution,
+        },
+    )
+
+    # generate category mapping for each item-id
+    df["category"] = pd.cut(df["item_id"], bins=334, labels=np.arange(1, 335)).astype(
+        np.int64
+    )
+
+    max_session_length = 60 * 60  # 1 hour
+
+    def add_timestamp_to_session(session: pd.DataFrame):
+        random_start_date_and_time = calendar.timegm(
+            (
+                start_date
+                # Add day offset from start_date
+                + datetime.timedelta(days=np.random.randint(0, number_of_days))
+                # Add time offset within the random day
+                + datetime.timedelta(seconds=np.random.randint(0, 86_400))
+            ).timetuple()
+        )
+        session["timestamp"] = random_start_date_and_time + np.clip(
+            np.random.lognormal(3.0, 1.0, len(session)).astype(np.int64),
+            0,
+            max_session_length,
+        )
+        return session
+
+    df = df.groupby("session_id").apply(add_timestamp_to_session).reset_index()
+
+    return df
+
 
 # In[6]:
 
 
+if USE_SYNTHETIC:
+    START_DATE = os.environ.get("START_DATE", "2014/4/1")
+    END_DATE = os.environ.get("END_DATE", "2014/4/5")
+    interactions_df = generate_synthetic_data(datetime.datetime.strptime(START_DATE, '%Y/%m/%d'),
+                                              datetime.datetime.strptime(END_DATE, '%Y/%m/%d'))
+    interactions_df = cudf.from_pandas(interactions_df)
+else:
+    interactions_df = cudf.read_csv(DATA_PATH, sep=',', 
+                                    names=['session_id','timestamp', 'item_id', 'category'], 
+                                    dtype=['int', 'datetime64[s]', 'int', 'int'])
+
+
+# #### Remove repeated interactions within the same session
+
+# In[7]:
+
+
 print("Count with in-session repeated interactions: {}".format(len(interactions_df)))
+
 # Sorts the dataframe by session and timestamp, to remove consecutive repetitions
 interactions_df.timestamp = interactions_df.timestamp.astype(int)
 interactions_df = interactions_df.sort_values(['session_id', 'timestamp'])
 past_ids = interactions_df['item_id'].shift(1).fillna()
 session_past_ids = interactions_df['session_id'].shift(1).fillna()
+
 # Keeping only no consecutive repeated in session interactions
 interactions_df = interactions_df[~((interactions_df['session_id'] == session_past_ids) & (interactions_df['item_id'] == past_ids))]
+
 print("Count after removed in-session repeated interactions: {}".format(len(interactions_df)))
 
 
 # #### Create new feature with the timestamp when the item was first seen
 
-# In[7]:
+# In[8]:
 
 
 items_first_ts_df = interactions_df.groupby('item_id').agg({'timestamp': 'min'}).reset_index().rename(columns={'timestamp': 'itemid_ts_first'})
@@ -118,20 +191,22 @@ print(interactions_merged_df.head())
 
 # Let's save the interactions_merged_df to disk to be able to use in the inference step.
 
-# In[8]:
+# In[9]:
 
 
+if os.path.isdir(DATA_FOLDER) == False:
+    os.mkdir(DATA_FOLDER)
 interactions_merged_df.to_parquet(os.path.join(DATA_FOLDER, 'interactions_merged_df.parquet'))
 
 
-# In[9]:
+# In[10]:
 
 
 # print the total number of unique items in the dataset
 print(interactions_merged_df.item_id.nunique())
 
 
-# In[10]:
+# In[11]:
 
 
 # free gpu memory
@@ -157,7 +232,7 @@ gc.collect()
 # 
 # For more ETL workflow examples, visit NVTabular [example notebooks](https://github.com/NVIDIA-Merlin/NVTabular/tree/stable/examples).
 
-# In[11]:
+# In[13]:
 
 
 # Encodes categorical features as contiguous integers
@@ -236,7 +311,7 @@ features = ColumnSelector(['session_id', 'timestamp']) + cat_feats + time_featur
 
 # Once the item features are generated, the objective of this cell is to group interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions.
 
-# In[12]:
+# In[14]:
 
 
 # Define Groupby Operator
@@ -255,7 +330,6 @@ groupby_features = features >> nvt.ops.Groupby(
 
 # Truncate sequence features to first interacted 20 items 
 SESSIONS_MAX_LENGTH = 20 
-
 
 item_feat = groupby_features['item_id-list'] >> nvt.ops.TagAsItemID()
 cont_feats = groupby_features['et_dayofweek_sin-list', 'product_recency_days_log_norm-list'] >> nvt.ops.AddMetadata(tags=[Tags.CONTINUOUS])
@@ -286,7 +360,7 @@ filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df["item_id
 
 # Once we have defined the general workflow (`filtered_sessions`), we provide our cudf dataset to `nvt.Dataset` class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features.
 
-# In[13]:
+# In[15]:
 
 
 dataset = nvt.Dataset(interactions_merged_df)
@@ -298,7 +372,7 @@ workflow.fit_transform(dataset).to_parquet(os.path.join(DATA_FOLDER, "processed_
 
 # Let's print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length.
 
-# In[14]:
+# In[16]:
 
 
 workflow.output_schema
@@ -306,7 +380,7 @@ workflow.output_schema
 
 # #### Save the preprocessing workflow
 
-# In[15]:
+# In[17]:
 
 
 workflow.save(os.path.join(DATA_FOLDER, "workflow_etl"))
@@ -318,21 +392,25 @@ workflow.save(os.path.join(DATA_FOLDER, "workflow_etl"))
 #   
 # P.s. It is worthwhile to note that the dataset has a single categorical feature (category), which, however, is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days.
 
-# In[16]:
+# In[18]:
 
 
 # read in the processed train dataset
 sessions_gdf = cudf.read_parquet(os.path.join(DATA_FOLDER, "processed_nvt/part_0.parquet"))
-sessions_gdf = sessions_gdf[sessions_gdf.day_index>=178]
+if USE_SYNTHETIC:
+    THRESHOLD_DAY_INDEX = int(os.environ.get("THRESHOLD_DAY_INDEX", '1'))
+    sessions_gdf = sessions_gdf[sessions_gdf.day_index>=THRESHOLD_DAY_INDEX]
+else:
+    sessions_gdf = sessions_gdf[sessions_gdf.day_index>=178]
 
 
-# In[17]:
+# In[19]:
 
 
 print(sessions_gdf.head(3))
 
 
-# In[18]:
+# In[20]:
 
 
 from transformers4rec.utils.data_utils import save_time_based_splits
@@ -343,7 +421,7 @@ save_time_based_splits(data=nvt.Dataset(sessions_gdf),
                       )
 
 
-# In[19]:
+# In[21]:
 
 
 # free gpu memory

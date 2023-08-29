@@ -65,7 +65,6 @@
 <li class="toctree-l3"><a class="reference internal" href="01-preprocess.html">Preliminary Preprocessing</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">ETL with NVTabular</a></li>
 <li class="toctree-l3"><a class="reference internal" href="03-Session-based-recsys.html">Session-based recommendation with Transformers4Rec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="04-Inference-with-Triton.html">Triton for Recommender Systems</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
@@ -209,7 +208,7 @@
 <li><p>we categorified the <code class="docutils literal notranslate"><span class="pre">user_session</span></code> column, so that it now has only integer values.</p></li>
 <li><p>we removed consequetively repeated (user, item) interactions. For example, an original session with <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3]</span></code> product interactions has become <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code> after removing the repeated interactions on the same item within the same session.</p></li>
 </ul>
-<p>Below, we start by reading in <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code>with cuDF. In order to create and save <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code> file, please run <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/tutorial">01-preprocess.ipynb</a> notebook first.</p>
+<p>Below, we start by reading in <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code>with cuDF. In order to create and save <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code> file, please run <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/examples/tutorial/01-preprocess.ipynb">01-preprocess.ipynb</a> notebook first.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
@@ -273,7 +272,7 @@ dtype: bool
 </div>
 </div>
 </div>
-<p>We see that <code class="docutils literal notranslate"><span class="pre">'category_code'</span></code> and <code class="docutils literal notranslate"><span class="pre">'brand'</span></code> columns have null values, and in the following cell we are going to fill these nulls with via categorify op, and then all categorical columns will be encoded to continuous integers. Note that we add <code class="docutils literal notranslate"><span class="pre">start_index=1</span></code> in the <code class="docutils literal notranslate"><span class="pre">Categorify</span> <span class="pre">op</span></code> for the categorical columns, the reason for that we want the encoded null values to start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p>
+<p>We see that <code class="docutils literal notranslate"><span class="pre">'category_code'</span></code> and <code class="docutils literal notranslate"><span class="pre">'brand'</span></code> columns have null values, and in the following cell we are going to fill these nulls with via categorify op, and then all categorical columns will be encoded to continuous integers. Categorify op maps nulls to <code class="docutils literal notranslate"><span class="pre">1</span></code>, OOVs to <code class="docutils literal notranslate"><span class="pre">2</span></code>, automatically. We reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features. The encoding of each category starts from <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
 </div>
 <div class="section" id="initialize-nvtabular-workflow">
 <h2>5. Initialize NVTabular Workflow<a class="headerlink" href="#initialize-nvtabular-workflow" title="Permalink to this headline"></a></h2>
@@ -283,7 +282,7 @@ dtype: bool
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># categorify features </span>
 <span class="n">item_id</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">TagAsItemID</span><span class="p">()</span>
-<span class="n">cat_feats</span> <span class="o">=</span> <span class="n">item_id</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;category_code&#39;</span><span class="p">,</span> <span class="s1">&#39;brand&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id&#39;</span><span class="p">,</span> <span class="s1">&#39;event_type&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">(</span><span class="n">start_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">cat_feats</span> <span class="o">=</span> <span class="n">item_id</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;category_code&#39;</span><span class="p">,</span> <span class="s1">&#39;brand&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id&#39;</span><span class="p">,</span> <span class="s1">&#39;event_type&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -581,288 +580,6 @@ dtype: bool
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>name</th>
-      <th>tags</th>
-      <th>dtype</th>
-      <th>is_list</th>
-      <th>is_ragged</th>
-      <th>properties.num_buckets</th>
-      <th>properties.freq_threshold</th>
-      <th>properties.max_size</th>
-      <th>properties.start_index</th>
-      <th>properties.cat_path</th>
-      <th>properties.domain.min</th>
-      <th>properties.domain.max</th>
-      <th>properties.domain.name</th>
-      <th>properties.embedding_sizes.cardinality</th>
-      <th>properties.embedding_sizes.dimension</th>
-      <th>properties.value_count.min</th>
-      <th>properties.value_count.max</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>user_session</td>
-      <td>(Tags.CATEGORICAL)</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>False</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>product_id-count</td>
-      <td>(Tags.ITEM_ID, Tags.ITEM, Tags.CATEGORICAL, Ta...</td>
-      <td>DType(name='int32', element_type=&lt;ElementType....</td>
-      <td>False</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>.//categories/unique.product_id.parquet</td>
-      <td>0.0</td>
-      <td>118334.0</td>
-      <td>product_id</td>
-      <td>118335.0</td>
-      <td>512.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>product_id-list</td>
-      <td>(Tags.ID, Tags.CATEGORICAL, Tags.LIST, Tags.IT...</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>.//categories/unique.product_id.parquet</td>
-      <td>0.0</td>
-      <td>118334.0</td>
-      <td>product_id</td>
-      <td>118335.0</td>
-      <td>512.0</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>category_code-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>.//categories/unique.category_code.parquet</td>
-      <td>0.0</td>
-      <td>124.0</td>
-      <td>category_code</td>
-      <td>125.0</td>
-      <td>24.0</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>brand-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>.//categories/unique.brand.parquet</td>
-      <td>0.0</td>
-      <td>2640.0</td>
-      <td>brand</td>
-      <td>2641.0</td>
-      <td>132.0</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>category_id-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>.//categories/unique.category_id.parquet</td>
-      <td>0.0</td>
-      <td>566.0</td>
-      <td>category_id</td>
-      <td>567.0</td>
-      <td>56.0</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>et_dayofweek_sin-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>et_dayofweek_cos-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>price_log_norm-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>relative_price_to_avg_categ_id-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float64', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>product_recency_days_log_norm-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>20.0</td>
-      <td>20.0</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>day_index</td>
-      <td>(Tags.CATEGORICAL)</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>False</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
 </div>
 <p>Above, we created an NVTabular Dataset object using our input dataset. Then, we calculate statistics for this workflow on the input dataset, i.e. on our training set, using the <code class="docutils literal notranslate"><span class="pre">workflow.fit()</span></code> method so that our Workflow can use these stats to transform any given input.</p>
 </div>
@@ -1037,12 +754,12 @@ dtype: bool
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../v23.05.00/index.html">v23.05.00</a></dd>
       <dd><a href="../../../v23.06.00/index.html">v23.06.00</a></dd>
+      <dd><a href="../../../v23.08.00/index.html">v23.08.00</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

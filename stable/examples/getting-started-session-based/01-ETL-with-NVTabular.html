@@ -144,6 +144,14 @@
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 <div class="section" id="define-input-output-path">
@@ -221,48 +229,48 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>83769</td>
-      <td>18</td>
-      <td>5</td>
-      <td>0.405307</td>
-      <td>0.061487</td>
-      <td>9</td>
+      <td>88348</td>
+      <td>28</td>
+      <td>7</td>
+      <td>0.416052</td>
+      <td>0.116508</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>80130</td>
-      <td>24</td>
+      <td>86615</td>
       <td>6</td>
-      <td>0.441516</td>
-      <td>0.436325</td>
-      <td>7</td>
+      <td>2</td>
+      <td>0.998783</td>
+      <td>0.539034</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>71523</td>
-      <td>61</td>
-      <td>15</td>
-      <td>0.952613</td>
-      <td>0.737854</td>
-      <td>7</td>
+      <td>85161</td>
+      <td>14</td>
+      <td>4</td>
+      <td>0.975656</td>
+      <td>0.246331</td>
+      <td>3</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>85847</td>
-      <td>4</td>
-      <td>1</td>
-      <td>0.346014</td>
-      <td>0.438771</td>
-      <td>1</td>
+      <td>75889</td>
+      <td>61</td>
+      <td>16</td>
+      <td>0.329182</td>
+      <td>0.033715</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>81181</td>
-      <td>21</td>
-      <td>5</td>
-      <td>0.302464</td>
-      <td>0.437222</td>
-      <td>5</td>
+      <td>75396</td>
+      <td>29</td>
+      <td>8</td>
+      <td>0.219127</td>
+      <td>0.993250</td>
+      <td>7</td>
     </tr>
   </tbody>
 </table>
@@ -271,8 +279,8 @@
 </div>
 <div class="section" id="feature-engineering-with-nvtabular">
 <h2>Feature Engineering with NVTabular<a class="headerlink" href="#feature-engineering-with-nvtabular" title="Permalink to this headline"></a></h2>
-<p>Deep Learning models require dense input features. Categorical features are sparse, and need to be represented by dense embeddings in the model. To allow for that, categorical features first need to be encoded as contiguous integers <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">...,</span> <span class="pre">|C|)</span></code>, where <code class="docutils literal notranslate"><span class="pre">|C|</span></code> is the feature cardinality (number of unique values), so that their embeddings can be efficiently stored in embedding layers.  We will use NVTabular to preprocess the categorical features, so that all categorical columns are encoded as contiguous integers. Note that the <code class="docutils literal notranslate"><span class="pre">Categorify</span></code> op encodes OOVs or nulls to <code class="docutils literal notranslate"><span class="pre">0</span></code> automatically. In our synthetic dataset we do not have any nulls. On the other hand <code class="docutils literal notranslate"><span class="pre">0</span></code> is also used for padding the sequences in input block, therefore, you can set <code class="docutils literal notranslate"><span class="pre">start_index=1</span></code> arg in the Categorify op if you want the encoded null or OOV values to start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p>
-<p>Here our goal is to create sequential features. To do so, we are grouping the features together at the session level in the following cell. In this synthetically generated example dataset, we do not have a timestamp column, but if we had one (that’s the case for most real-world datasets), we would be sorting the interactions by the timestamp column as in this <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/01-ETL-with-NVTabular.ipynb">example notebook</a>. Note that we also trim each feature sequence in a  session to a certain length. Here, we use the NVTabular library so that we can easily preprocess and create features on GPU with a few lines.</p>
+<p>Deep Learning models require dense input features. Categorical features are sparse, and need to be represented by dense embeddings in the model. To allow for that, categorical features first need to be encoded as contiguous integers <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">...,</span> <span class="pre">|C|)</span></code>, where <code class="docutils literal notranslate"><span class="pre">|C|</span></code> is the feature cardinality (number of unique values), so that their embeddings can be efficiently stored in embedding layers.  We will use NVTabular to preprocess the categorical features, so that all categorical columns are encoded as contiguous integers. Note that the <code class="docutils literal notranslate"><span class="pre">Categorify</span></code> op encodes <code class="docutils literal notranslate"><span class="pre">nulls</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>, OOVs to <code class="docutils literal notranslate"><span class="pre">2</span></code> automatically. We preserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding. The encoding of other categories starts from <code class="docutils literal notranslate"><span class="pre">3</span></code>. In our synthetic dataset we do not have any nulls. On the other hand <code class="docutils literal notranslate"><span class="pre">0</span></code> is used for padding the sequences in input block.</p>
+<p>Here our goal is to create sequential features. To do so, we are grouping the features together at the session level in the following cell. In this synthetically generated example dataset, we do not have a timestamp column, but if we had one (that’s the case for most real-world datasets), we would be sorting the interactions by the timestamp column as in this <a class="reference internal" href="../end-to-end-session-based/01-ETL-with-NVTabular.html"><span class="doc std std-doc">example notebook</span></a>. Note that we also trim each feature sequence in a  session to a certain length. Here, we use the NVTabular library so that we can easily preprocess and create features on GPU with a few lines.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SESSIONS_MAX_LENGTH</span> <span class="o">=</span><span class="mi">20</span>
@@ -335,98 +343,6 @@
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-</pre></div>
-</div>
-</div>
 </div>
 <p>It is possible to save the preprocessing workflow. That is useful to apply the same preprocessing to other data (with the same schema) and also to deploy the session-based recommendation pipeline to Triton Inference Server.</p>
 <div class="cell docutils container">
@@ -462,7 +378,6 @@
       <th>properties.num_buckets</th>
       <th>properties.freq_threshold</th>
       <th>properties.max_size</th>
-      <th>properties.start_index</th>
       <th>properties.cat_path</th>
       <th>properties.domain.min</th>
       <th>properties.domain.max</th>
@@ -481,7 +396,6 @@
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>False</td>
       <td>False</td>
-      <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -512,24 +426,22 @@
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>NaN</td>
     </tr>
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM, Tags.LIST, Tags.ITEM_ID, Tags.ID, ...</td>
+      <td>(Tags.CATEGORICAL, Tags.ID, Tags.LIST, Tags.ITEM)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>0.0</td>
       <td>.//categories/unique.item_id.parquet</td>
       <td>0.0</td>
-      <td>492.0</td>
+      <td>494.0</td>
       <td>item_id</td>
-      <td>493.0</td>
+      <td>495.0</td>
       <td>52.0</td>
       <td>2.0</td>
       <td>16.0</td>
@@ -537,19 +449,18 @@
     <tr>
       <th>3</th>
       <td>category-list</td>
-      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>0.0</td>
       <td>.//categories/unique.category.parquet</td>
       <td>0.0</td>
-      <td>172.0</td>
+      <td>171.0</td>
       <td>category</td>
-      <td>173.0</td>
+      <td>172.0</td>
       <td>29.0</td>
       <td>2.0</td>
       <td>16.0</td>
@@ -557,11 +468,10 @@
     <tr>
       <th>4</th>
       <td>age_days-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>True</td>
-      <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -577,11 +487,10 @@
     <tr>
       <th>5</th>
       <td>weekday_sin-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>True</td>
-      <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -632,20 +541,20 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id  day-first            item_id-list          category-list  \
-0       70000          4  [41, 174, 53, 6, 1, 1]  [10, 45, 13, 2, 1, 1]   
-1       70001          7   [61, 6, 8, 19, 27, 1]    [15, 2, 2, 5, 7, 1]   
-2       70002          9             [3, 186, 7]             [1, 45, 2]   
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id  day-first              item_id-list            category-list  \
+0       70000          1          [306, 5, 40, 17]          [104, 3, 12, 6]   
+1       70001          1       [43, 20, 69, 8, 57]       [13, 6, 21, 3, 16]   
+2       70002          1  [137, 35, 37, 85, 65, 5]  [37, 10, 11, 22, 18, 3]   
 
                                        age_days-list  \
-0  [0.7460891, 0.428004, 0.5986437, 0.06489895, 0...   
-1  [0.5229818, 0.7588001, 0.52459955, 0.21908909,...   
-2              [0.050518222, 0.123651706, 0.7635223]   
+0   [0.044022594, 0.34956282, 0.7326993, 0.09403495]   
+1  [0.8072543, 0.28916782, 0.04966254, 0.08417622...   
+2  [0.04696693, 0.94499177, 0.2922437, 0.83047426...   
 
                                     weekday_sin-list  
-0  [0.8084707, 0.28762853, 0.6447227, 0.23568074,...  
-1  [0.34757933, 0.71422356, 0.5048536, 0.91580784...  
-2                [0.0969222, 0.007312222, 0.5712969]  
+0    [0.7417527, 0.60325843, 0.07417604, 0.28911334]  
+1  [0.7995051, 0.86722755, 0.84298295, 0.15793765...  
+2  [0.72519076, 0.92308444, 0.40120387, 0.3821016...  
 </pre></div>
 </div>
 </div>
@@ -662,7 +571,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████| 9/9 [00:00&lt;00:00, 34.13it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████| 9/9 [00:02&lt;00:00,  4.12it/s]
 </pre></div>
 </div>
 </div>
@@ -713,43 +622,43 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>70005</td>
-      <td>[18, 44, 10, 28]</td>
-      <td>[5, 11, 2, 7]</td>
-      <td>[0.68638474, 0.5562314, 0.15063263, 0.15271373]</td>
-      <td>[0.9033511, 0.61792773, 0.2624225, 0.6792286]</td>
+      <td>70000</td>
+      <td>[306, 5, 40, 17]</td>
+      <td>[104, 3, 12, 6]</td>
+      <td>[0.044022594, 0.34956282, 0.7326993, 0.09403495]</td>
+      <td>[0.7417527, 0.60325843, 0.07417604, 0.28911334]</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>70021</td>
-      <td>[123, 9, 165, 58]</td>
-      <td>[32, 3, 40, 15]</td>
-      <td>[0.845705, 0.49234316, 0.06037465, 0.49099287]</td>
-      <td>[0.9355467, 0.6995572, 0.5586675, 0.7762437]</td>
+      <td>70001</td>
+      <td>[43, 20, 69, 8, 57]</td>
+      <td>[13, 6, 21, 3, 16]</td>
+      <td>[0.8072543, 0.28916782, 0.04966254, 0.08417622...</td>
+      <td>[0.7995051, 0.86722755, 0.84298295, 0.15793765...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>70024</td>
-      <td>[17, 7, 85, 2]</td>
-      <td>[5, 2, 21, 1]</td>
-      <td>[0.10014895, 0.8815941, 0.120751254, 0.6055496]</td>
-      <td>[0.9650407, 0.31927255, 0.64654016, 0.09534722]</td>
+      <td>70002</td>
+      <td>[137, 35, 37, 85, 65, 5]</td>
+      <td>[37, 10, 11, 22, 18, 3]</td>
+      <td>[0.04696693, 0.94499177, 0.2922437, 0.83047426...</td>
+      <td>[0.72519076, 0.92308444, 0.40120387, 0.3821016...</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>70056</td>
-      <td>[4, 5, 65, 22, 23, 9, 51]</td>
-      <td>[1, 3, 16, 6, 6, 3, 13]</td>
-      <td>[0.0072424724, 0.47864556, 0.011090885, 0.7643...</td>
-      <td>[0.23196527, 0.30617988, 0.308681, 0.4716874, ...</td>
+      <td>70007</td>
+      <td>[28, 9, 153, 74, 53, 15, 173]</td>
+      <td>[9, 4, 39, 20, 15, 5, 46]</td>
+      <td>[0.4730765, 0.69885534, 0.034774363, 0.7225920...</td>
+      <td>[0.33613566, 0.660022, 0.72897774, 0.66087157,...</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>70070</td>
-      <td>[2, 8, 11, 82]</td>
-      <td>[1, 2, 4, 20]</td>
-      <td>[0.73769826, 0.68819356, 0.34728694, 0.8315548]</td>
-      <td>[0.1711698, 0.44255763, 0.6116058, 0.9729463]</td>
+      <td>70021</td>
+      <td>[59, 32, 11, 21, 23, 23, 9, 15]</td>
+      <td>[17, 10, 7, 7, 8, 8, 4, 5]</td>
+      <td>[0.07898139, 0.27463168, 0.1885847, 0.5203435,...</td>
+      <td>[0.39734098, 0.74895114, 0.43540764, 0.8372503...</td>
     </tr>
   </tbody>
 </table>
@@ -764,7 +673,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>555
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>512
 </pre></div>
 </div>
 </div>
@@ -807,12 +716,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../v23.05.00/index.html">v23.05.00</a></dd>
       <dd><a href="../../../v23.06.00/index.html">v23.06.00</a></dd>
+      <dd><a href="../../../v23.08.00/index.html">v23.08.00</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
