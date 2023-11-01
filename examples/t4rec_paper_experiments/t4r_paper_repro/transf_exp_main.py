@@ -22,7 +22,6 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import torch
-import transformers
 from exp_outputs import (
     config_dllogger,
     creates_output_dir,
@@ -33,14 +32,15 @@ from exp_outputs import (
 from merlin.io import Dataset
 from merlin.schema import Tags
 from transf_exp_args import DataArguments, ModelArguments, TrainingArguments
-from transformers import HfArgumentParser, set_seed
-from transformers.trainer_utils import is_main_process
 
+import transformers
 import transformers4rec.torch as t4r
 from merlin_standard_lib import Schema
+from transformers import HfArgumentParser, set_seed
 from transformers4rec.torch import Trainer
 from transformers4rec.torch.utils.data_utils import MerlinDataLoader
 from transformers4rec.torch.utils.examples_utils import wipe_memory
+from transformers.trainer_utils import is_main_process
 
 logger = logging.getLogger(__name__)
 
@@ -224,7 +224,7 @@ def main():
     logger.info(f"Recall@10 of manually masked test data = {str(recall_10)}")
     output_file = os.path.join(training_args.output_dir, "eval_results_over_time.txt")
     with open(output_file, "a") as writer:
-        writer.write(f"\n***** Recall@10 of simulated inference  = {recall_10} *****\n")
+        writer.write(f"\n***** Recall@10 of simulated inference = {recall_10} *****\n")
     # Verify that the recall@10 from train.evaluate() matches the recall@10 calculated manually
     if not isinstance(input_module.masking, t4r.masking.PermutationLanguageModeling):
         # TODO fix inference discrepancy for permutation language modeling
