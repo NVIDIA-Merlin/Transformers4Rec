@@ -274,6 +274,10 @@ class CausalLanguageModeling(MaskSequence):
     def _compute_masked_targets(
         self, item_ids: torch.Tensor, training: bool = False, testing: bool = False
     ) -> MaskingInfo:
+        if not training and not testing:
+            mask_labels = item_ids != self.padding_idx
+            return MaskingInfo(mask_labels, item_ids)
+
         masking_info = self.predict_all(item_ids)
         mask_labels, labels = masking_info.schema, masking_info.targets
 
@@ -290,7 +294,8 @@ class CausalLanguageModeling(MaskSequence):
             label_seq_trg_eval[rows_ids, last_item_sessions] = labels[rows_ids, last_item_sessions]
             # Updating labels and mask
             labels = label_seq_trg_eval
-            mask_labels = label_seq_trg_eval != self.padding_idx
+            # We only mask padded positions
+            mask_labels = item_ids != self.padding_idx
 
         return MaskingInfo(mask_labels, labels)
 
@@ -302,6 +307,13 @@ class CausalLanguageModeling(MaskSequence):
         testing: bool = False,
     ) -> torch.Tensor:
         if not training and not testing:
+            # Replacing the inputs corresponding to padded items with a trainable embedding
+            # To mimic training and evaluation masking strategy
+            inputs = torch.where(
+                mask_schema.unsqueeze(-1).bool(),
+                inputs,
+                self.masked_item_embedding.to(inputs.dtype),
+            )
             return inputs
         # shift sequence of interaction embeddings
         pos_emb_inp = inputs[:, :-1]
@@ -316,7 +328,7 @@ class CausalLanguageModeling(MaskSequence):
             ],
             axis=1,
         )
-        # Replacing the inputs corresponding to masked label with a trainable embedding
+        # Replacing the inputs corresponding to padded items with a trainable embedding
         pos_emb_inp = torch.where(
             mask_schema.unsqueeze(-1).bool(),
             pos_emb_inp,
@@ -601,14 +613,16 @@ class PermutationLanguageModeling(MaskSequence):
                         # from the interval `[cur_len, cur_len + context_length - span_length]`
                         start_index = (
                             cur_len
-                            + torch.randint(  # type: ignore
-                                context_length - span_length + 1, (1,)
+                            + torch.randint(
+                                context_length - span_length + 1, (1,)  # type: ignore
                             ).item()
                         )
                         if start_index < max_len:
                             # Mask the span of non-padded items
                             #   `start_index:start_index + span_length`
-                            mask_labels[i, start_index : start_index + span_length] = 1
+                            mask_labels[
+                                i, start_index : start_index + span_length  # type: ignore
+                            ] = 1
                         # Set `cur_len = cur_len + context_length`
                         cur_len += context_length
                     # if no item was masked:
