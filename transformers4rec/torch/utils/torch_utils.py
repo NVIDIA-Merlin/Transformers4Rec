@@ -23,6 +23,7 @@ import numpy as np
 import torch
 from merlin.schema import Schema as CoreSchema
 from merlin.schema.io.proto_utils import has_field
+from merlin.schema.tags import Tags
 
 from merlin_standard_lib import Schema
 from merlin_standard_lib.schema.schema import ColumnSchema
@@ -167,14 +168,28 @@ def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_len
 
     for feature in features:
         name = feature.name
+        # Pretrained embeddings (2-D or 3-D)
+        if Tags.EMBEDDING in feature.tags:
+            if len(feature.shape.dims) > 2:
+                sizes[name] = torch.Size(
+                    [
+                        batch_size,
+                        max_sequence_length if max_sequence_length else feature.value_count.max,
+                        feature.shape[-1].min,
+                    ]
+                )
+            else:
+                sizes[name] = torch.Size([batch_size, feature.shape[-1].min])
+
         # Sequential or multi-hot feature
-        if _has_field(feature, "value_count"):
+        elif _has_field(feature, "value_count"):
             sizes[name] = torch.Size(
                 [
                     batch_size,
                     max_sequence_length if max_sequence_length else feature.value_count.max,
                 ]
             )
+
         else:
             sizes[name] = _get_size_from_shape(feature, batch_size)
 

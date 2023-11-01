@@ -24,6 +24,7 @@ from merlin.dataloader.torch import Loader
 from merlin.models.utils.misc_utils import validate_dataset
 from merlin.models.utils.registry import Registry
 from merlin.schema import Tags
+from merlin.schema.io.tensorflow_metadata import TensorflowMetadata
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
@@ -239,6 +240,9 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
     labels : List[str], optional
         The list of label columns in the dataset.
         By default None.
+    lists : List[str], optional
+        The list of sequential columns in the dataset.
+        By default None.
     shuffle : bool, optional
         Enable/disable shuffling of dataset.
         By default False.
@@ -247,16 +251,6 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         to concatenate into a "chunk". By default 1.
     device : int, optional
         The device id of the selected GPU
-        By default None.
-    sparse_names : [str], optional
-        List with column names of columns that should be represented as sparse tensors.
-        By default None.
-    sparse_max : Dict[str, int], optional
-        A dictionary of key: column_name + value: integer representing the max sequence
-        length for a list column.
-        By default None.
-    sparse_as_dense : bool, optional
-        Boolean value to activate transforming sparse tensors to dense ones.
         By default None.
     drop_last: bool, optional
         Whether or not to drop the last batch in an epoch. This is useful when you need to
@@ -283,16 +277,20 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
     collate_fn: Callable, optional
         A processing function to collect and prepare the list samples
         (tuple of (input, target) Tensor(s)) returned by the Merlin DataLoader.
+    transforms: List[merlin.dag.BaseOperator]
+        A list of operators that the Merlin dataloader applies on top of the loaded
+        batch, which is a tuple of input and target tensors.
     """
 
     def __init__(
         self,
         paths_or_dataset,
         batch_size,
-        max_sequence_length,
+        max_sequence_length=None,
         conts=None,
         cats=None,
         labels=None,
+        lists=None,
         collate_fn=lambda x: x[0],
         engine=None,
         buffer_size=0.1,
@@ -303,12 +301,10 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         device=None,
         global_size=None,
         global_rank=None,
-        sparse_names=None,
-        sparse_max=None,
-        sparse_as_dense=True,
         drop_last=False,
         schema=None,
         row_groups_per_part=True,
+        transforms=None,
         **kwargs,
     ):
         T4RecDataLoader.__init__(self)
@@ -321,7 +317,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
 
         reader_kwargs = reader_kwargs or {}
         reader_kwargs["row_groups_per_part"] = row_groups_per_part
-        self.set_dataset(buffer_size, engine, reader_kwargs)
+        self.set_dataset(buffer_size, engine, reader_kwargs, schema=schema)
 
         if (global_rank is not None) and (self.dataset.npartitions < global_size):
             logger.warning(
@@ -343,7 +339,11 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             )
 
         self.dataset.schema = self._augment_schema(
-            self.dataset.schema, cats=cats, conts=conts, labels=labels
+            self.dataset.schema,
+            cats=cats,
+            conts=conts,
+            labels=labels,
+            lists=lists,
         )
 
         loader = Loader(
@@ -356,7 +356,14 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             global_size=global_size,
             global_rank=global_rank,
             drop_last=drop_last,
-        ).map(self._get_pad_fn(sparse_max))
+            transforms=transforms,
+        )
+        if max_sequence_length:
+            # Apply padding
+            output_schema = loader.output_schema
+            sparse_feats = [col.name for col in output_schema if Tags.LIST in col.tags]
+            sparse_max = {name: max_sequence_length for name in sparse_feats}
+            loader = loader.map(self._get_pad_fn(sparse_max))
 
         DLDataLoader.__init__(
             self,
@@ -386,12 +393,13 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         cats=None,
         conts=None,
         labels=None,
+        lists=None,
     ):
         cats = cats or []
         conts = conts or []
         labels = labels or []
 
-        schema = schema.select_by_name(conts + cats + labels)
+        schema = schema.select_by_name(conts + cats + labels + lists)
 
         labels = [labels] if isinstance(labels, str) else labels
         for label in labels:
@@ -400,10 +408,12 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             schema[label] = schema[label].with_tags(Tags.CATEGORICAL)
         for label in conts:
             schema[label] = schema[label].with_tags(Tags.CONTINUOUS)
+        for col in lists:
+            schema[col] = schema[col].with_tags(Tags.LIST)
 
         return schema
 
-    def set_dataset(self, buffer_size, engine, reader_kwargs):
+    def set_dataset(self, buffer_size, engine, reader_kwargs, schema=None):
         dataset = validate_dataset(
             self.paths_or_dataset,
             self.batch_size,
@@ -411,6 +421,12 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             engine,
             reader_kwargs,
         )
+        if schema:
+            # set the dataset schema based on the provided one to keep all original information
+            if isinstance(schema, Schema):
+                # convert merlin-standardlib schema to merlin-core schema
+                schema = to_core_schema(schema)
+            dataset.schema = schema
         self.dataset = dataset
 
     @classmethod
@@ -419,16 +435,16 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         schema: Schema,
         paths_or_dataset,
         batch_size,
-        max_sequence_length,
+        max_sequence_length=None,
         continuous_features=None,
         categorical_features=None,
+        list_features=None,
         targets=None,
         collate_fn=lambda x: x[0],
         shuffle=True,
         buffer_size=0.06,
         parts_per_chunk=1,
-        sparse_names=None,
-        sparse_max=None,
+        transforms=None,
         **kwargs,
     ):
         """
@@ -441,8 +457,6 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
                 Path to paquet data of Dataset object.
             batch_size: int
                 batch size of Dataloader.
-            max_sequence_length: int
-                The maximum length of list features.
         """
         categorical_features = (
             categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
@@ -451,28 +465,33 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
         )
         targets = targets or schema.select_by_tag(Tags.TARGET).column_names
-        schema = schema.select_by_name(categorical_features + continuous_features + targets)
-        sparse_names = sparse_names or schema.select_by_tag(Tags.LIST).column_names
-        sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
+        list_features = list_features or schema.select_by_tag(Tags.LIST).column_names
+        schema = schema.select_by_name(
+            categorical_features + continuous_features + targets + list_features
+        )
         loader = cls(
             paths_or_dataset,
             batch_size=batch_size,
-            max_sequence_length=max_sequence_length,
             labels=targets,
+            max_sequence_length=max_sequence_length,
             cats=categorical_features,
             conts=continuous_features,
+            lists=list_features,
             collate_fn=collate_fn,
             engine="parquet",
             shuffle=shuffle,
             buffer_size=buffer_size,  # how many batches to load at once
             parts_per_chunk=parts_per_chunk,
-            sparse_names=sparse_names,
-            sparse_max=sparse_max,
             schema=schema,
+            transforms=transforms,
             **kwargs,
         )
 
         return loader
+
+    @property
+    def output_schema(self):
+        return self.dataset.output_schema
 
 
 class ParquetDataset(Dataset):
@@ -520,3 +539,7 @@ class ShuffleDataset(IterableDataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+def to_core_schema(t4rec_schema):
+    return TensorflowMetadata.from_json(t4rec_schema.to_json()).to_merlin_schema()

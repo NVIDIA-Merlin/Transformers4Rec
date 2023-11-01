@@ -3,16 +3,23 @@ name: GPU NOTEBOOK CI
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
+      - "pull-request/[0-9]+"
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
 
 jobs:
   gpu-ci-integration:
-    runs-on: 1GPU
+    runs-on: linux-amd64-gpu-p100-latest-1
+    container:
+      image: nvcr.io/nvstaging/merlin/merlin-ci-runner:latest
+      env:
+        NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
+      options: --shm-size=1G
+      credentials:
+        username: $oauthtoken
+        password: ${{ secrets.NGC_TOKEN }}
 
     steps:
       - uses: actions/checkout@v3
@@ -29,4 +36,4 @@ jobs:
             # find the release branch that we're pointing at
             branch=$(git branch -r --contains ${{ github.ref_name }} --list '*release*' --format "%(refname:short)" | sed -e 's/^origin\///')
           fi
-          cd ${{ github.workspace }}; tox -e test-gpu-integration -- $branch
+          tox -e test-gpu-integration -- $branch
