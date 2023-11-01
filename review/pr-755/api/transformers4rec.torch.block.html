@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.torch.block package &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.block.html" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="transformers4rec.torch.features package" href="transformers4rec.torch.features.html" />
+    <link rel="prev" title="transformers4rec.torch package" href="transformers4rec.torch.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="transformers4rec.html">transformers4rec package</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="transformers4rec.config.html">transformers4rec.config package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="transformers4rec.torch.html">transformers4rec.torch package</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">transformers4rec.torch.block package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html">transformers4rec.torch.features package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.model.html">transformers4rec.torch.model package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html">transformers4rec.torch.tabular package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html">transformers4rec.torch.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="transformers4rec.utils.html">transformers4rec.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="merlin_standard_lib.html">merlin_standard_lib package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">API Documentation</a> &raquo;</li>
+          <li><a href="transformers4rec.html">transformers4rec package</a> &raquo;</li>
+          <li><a href="transformers4rec.torch.html">transformers4rec.torch package</a> &raquo;</li>
+      <li>transformers4rec.torch.block package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="transformers4rec-torch-block-package">
+<h1>transformers4rec.torch.block package<a class="headerlink" href="#transformers4rec-torch-block-package" title="Permalink to this headline"></a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-transformers4rec.torch.block.base">
+<span id="transformers4rec-torch-block-base-module"></span><h2>transformers4rec.torch.block.base module<a class="headerlink" href="#module-transformers4rec.torch.block.base" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.torch.block.base.BlockBase">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">BlockBase</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#BlockBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.BlockBase" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.OutputSizeMixin" title="transformers4rec.torch.utils.torch_utils.OutputSizeMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.utils.torch_utils.OutputSizeMixin</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></a></p>
+<p>A subclass of PyTorch’s torch.nn.Module, providing additional functionality
+for dealing with automatic setting of input/output dimensions of neural networks layers.
+Specifically, It implements the ‘OutputSizeMixin’ for managing output sizes.</p>
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.BlockBase.to_model">
+<code class="sig-name descname"><span class="pre">to_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction_task_or_head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#BlockBase.to_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.BlockBase.to_model" title="Permalink to this definition"></a></dt>
+<dd><p>Converts the BlockBase instance into a T4Rec model by attaching it to
+attaching a ‘Head’ or ‘PredictionTask’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prediction_task_or_head</strong> (<em>Union</em><em>[</em><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.PredictionTask" title="transformers4rec.torch.PredictionTask"><em>PredictionTask</em></a><em>, </em><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.Head" title="transformers4rec.torch.Head"><em>Head</em></a><em>]</em>) – A PredictionTask or Head instance to attach to this block.</p></li>
+<li><p><strong>inputs</strong> (<a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec.torch.features.base.InputBlock" title="transformers4rec.torch.features.base.InputBlock"><em>InputBlock</em></a><em>, </em><em>optional</em>) – The input block representing input features.
+By default None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If prediction_task_or_head is neither a Head nor a PredictionTask.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.BlockBase.as_tabular">
+<code class="sig-name descname"><span class="pre">as_tabular</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#BlockBase.as_tabular"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.BlockBase.as_tabular" title="Permalink to this definition"></a></dt>
+<dd><p>Converts the output of the block into a dictionary, keyed by the
+provided name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – The output name, if not provided, uses the name of the block class.
+by default None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.block.base.Block">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">Block</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><span class="pre">torch.nn.modules.module.Module</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">torch.Size</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#Block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.Block" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></code></a></p>
+<p>Wraps a PyTorch module, allowing it to be used as a block in a T4Rec model.
+It carries the module and its expected output size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – The PyTorch module to be wrapped in this block.</p></li>
+<li><p><strong>output_size</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em>) – The expected output size of the module.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.Block.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#Block.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.Block.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.Block.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#Block.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.Block.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the output size of the tensor(s) returned by the forward pass,
+given the input size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_size</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em>) – The size of the input tensor(s) to the module.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The size of the output from the module.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Union[List[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)">int</a>], torch.Size]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.block.base.SequentialBlock">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">SequentialBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">torch.Size</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.container.Sequential</span></code></a></p>
+<p>Extends the module torch.nn.Sequential. It’s used for creating
+a sequence of layers or blocks in a T4Rec model. The modules
+will be applied to inputs in the order they are passed in the constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – The list of PyTorch modules.</p></li>
+<li><p><strong>output_size</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em><em>, </em><em>optional</em>) – The expected output size from the last layer in the sequential block
+By default None</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.SequentialBlock.inputs">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">inputs</span></code><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.inputs" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.SequentialBlock.add_module">
+<code class="sig-name descname"><span class="pre">add_module</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><span class="pre">torch.nn.modules.module.Module</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.add_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.add_module" title="Permalink to this definition"></a></dt>
+<dd><p>Adds a PyTorch module to the sequential block. If a list of strings is provided,
+a <cite>FilterFeatures</cite> block gets added to the sequential block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The name of the child module. The child module can be accessed
+from this module using the given name.</p></li>
+<li><p><strong>module</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>, </em><em>Module</em><em>]</em><em>]</em>) – The child module to be added to the module.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.SequentialBlock.add_module_and_maybe_build">
+<code class="sig-name descname"><span class="pre">add_module_and_maybe_build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><span class="pre">torch.nn.modules.module.Module</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.add_module_and_maybe_build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.add_module_and_maybe_build" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if a module needs to be built and adds it to the sequential block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The name of the child module.</p></li>
+<li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – The child module to be added to the sequential block.</p></li>
+<li><p><strong>parent</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – The parent module.</p></li>
+<li><p><strong>idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – The index of the current module in the sequential block.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.SequentialBlock.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Applies the module’s layers sequentially to the input block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>tensor</em>) – The input to the block.</p></li>
+<li><p><strong>training</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether the block is in training mode. The default is False.</p></li>
+<li><p><strong>testing</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether the block is in testing mode. The default is False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.SequentialBlock.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.build" title="Permalink to this definition"></a></dt>
+<dd><p>Builds the layers of the sequential block given the input size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_size</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em>) – The size of the input tensor(s).</p></li>
+<li><p><strong>schema</strong> (<a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.Schema" title="merlin_standard_lib.Schema"><em>Schema</em></a><em>, </em><em>optional</em>) – The schema of the inputs features, by default None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The built sequential block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#transformers4rec.torch.block.base.SequentialBlock" title="transformers4rec.torch.block.base.SequentialBlock">SequentialBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.SequentialBlock.as_tabular">
+<code class="sig-name descname"><span class="pre">as_tabular</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.as_tabular"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.as_tabular" title="Permalink to this definition"></a></dt>
+<dd><p>Converts the output of the block into a dictionary, keyed by the
+provided name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – The output name, if not provided, uses the name of the block class.
+by default None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.SequentialBlock.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the output size of the tensor(s) returned by the forward pass,
+given the input size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_size</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em>) – The size of the input tensor(s) to the module.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The size of the output from the module.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Union[List[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)">int</a>], torch.Size]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.SequentialBlock.get_children_by_class_name">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">get_children_by_class_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">class_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.get_children_by_class_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.get_children_by_class_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.block.base.build_blocks">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">build_blocks</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#build_blocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.build_blocks" title="Permalink to this definition"></a></dt>
+<dd><p>Builds a SequentialBlock from a list of PyTorch modules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>*modules</strong> (<em>List</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a><em>]</em>) – List containing PyTorch modules.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>A SequentialBlock instance created from the provided modules.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.block.base.BuildableBlock">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">BuildableBlock</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#BuildableBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.BuildableBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Abstract base class for buildable blocks.
+Subclasses of BuildableBlock must implement the <cite>build</cite> method</p>
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.BuildableBlock.build">
+<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#BuildableBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.BuildableBlock.build" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.base.BuildableBlock.to_module">
+<code class="sig-name descname"><span class="pre">to_module</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape_or_module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#BuildableBlock.to_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.BuildableBlock.to_module" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.block.base.right_shift_block">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">right_shift_block</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#right_shift_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.right_shift_block" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.torch.block.mlp">
+<span id="transformers4rec-torch-block-mlp-module"></span><h2>transformers4rec.torch.block.mlp module<a class="headerlink" href="#module-transformers4rec.torch.block.mlp" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.torch.block.mlp.MLPBlock">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.mlp.</span></code><code class="sig-name descname"><span class="pre">MLPBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dimensions</span></em>, <em class="sig-param"><span class="pre">activation=&lt;class</span> <span class="pre">'torch.nn.modules.activation.ReLU'&gt;</span></em>, <em class="sig-param"><span class="pre">use_bias:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></em>, <em class="sig-param"><span class="pre">dropout:</span> <span class="pre">Optional[float]</span> <span class="pre">=</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">normalization:</span> <span class="pre">Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">filter_features=None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/mlp.html#MLPBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.mlp.MLPBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></code></a></p>
+<p>Defines Multi-Layer Perceptron (MLP) Block by stacking
+multiple DenseBlock instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dimensions</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> or </em><em>list of int</em>) – The dimensions of the layers in the MLP.
+If an integer is provided, a single layer MLP is created.
+If a list is provided, it must contain the size of each layer in order.</p></li>
+<li><p><strong>activation</strong> (<em>optional</em>) – The activation function to apply after each layer.
+By default <cite>torch.nn.ReLU</cite>.</p></li>
+<li><p><strong>use_bias</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to add a bias term to the dense layers.
+by default True</p></li>
+<li><p><strong>dropout</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – The dropout rate to apply after each layer, by default None</p></li>
+<li><p><strong>normalization</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – The normalization to apply after each layer, by default None</p></li>
+<li><p><strong>filter_features</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of features to select from the input., by default None</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.block.mlp.MLPBlock.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#transformers4rec.torch.block.base.SequentialBlock" title="transformers4rec.torch.block.base.SequentialBlock"><span class="pre">transformers4rec.torch.block.base.SequentialBlock</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/block/mlp.html#MLPBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.mlp.MLPBlock.build" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.block.mlp.DenseBlock">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.mlp.</span></code><code class="sig-name descname"><span class="pre">DenseBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">input_shape:</span> <span class="pre">Union[List[int],</span> <span class="pre">torch.Size],</span> <span class="pre">in_features:</span> <span class="pre">int,</span> <span class="pre">out_features:</span> <span class="pre">int,</span> <span class="pre">activation=&lt;class</span> <span class="pre">'torch.nn.modules.activation.ReLU'&gt;,</span> <span class="pre">use_bias:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">dropout:</span> <span class="pre">Optional[float]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">normalization=None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/mlp.html#DenseBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.mlp.DenseBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.base.SequentialBlock" title="transformers4rec.torch.block.base.SequentialBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.SequentialBlock</span></code></a></p>
+<p>A buildable dense Block to represent a fully connected layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em>) – The shape of the input tensor.</p></li>
+<li><p><strong>in_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of input features.</p></li>
+<li><p><strong>out_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of output features.</p></li>
+<li><p><strong>activation</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a><em>, </em><em>optional</em>) – The activation function to apply after the linear layer.
+By default <cite>torch.nn.ReLU</cite>.</p></li>
+<li><p><strong>use_bias</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to use bias in the layer.
+By default True.</p></li>
+<li><p><strong>dropout</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – The dropout rate to apply after the dense layer, if any.
+By default is None.</p></li>
+<li><p><strong>normalization</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – The type of normalization to apply after the dense layer.
+Only ‘batch_norm’ is supported.
+By default is None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.block.mlp.DenseBlock.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/mlp.html#DenseBlock.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.mlp.DenseBlock.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.torch.block.transformer">
+<span id="transformers4rec-torch-block-transformer-module"></span><h2>transformers4rec.torch.block.transformer module<a class="headerlink" href="#module-transformers4rec.torch.block.transformer" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.torch.block.transformer.TransformerPrepare">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.transformer.</span></code><code class="sig-name descname"><span class="pre">TransformerPrepare</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transformer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.modeling_utils.PreTrainedModel</span><span class="p"><span class="pre">,</span> </span><span class="pre">transformers.configuration_utils.PretrainedConfig</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><span class="pre">transformers4rec.torch.masking.MaskSequence</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#TransformerPrepare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerPrepare" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></a></p>
+<p>Base class to prepare additional inputs to the forward call of
+the HF transformer layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transformer</strong> (<em>TransformerBody</em>) – The Transformer module.</p></li>
+<li><p><strong>masking</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><em>MaskSequence</em></a><em>]</em>) – Masking block used to for masking input sequences.
+By default None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.block.transformer.TransformerPrepare.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_embeds</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#TransformerPrepare.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerPrepare.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.TransformerPrepare.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerPrepare.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.block.transformer.GPT2Prepare">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.transformer.</span></code><code class="sig-name descname"><span class="pre">GPT2Prepare</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transformer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.modeling_utils.PreTrainedModel</span><span class="p"><span class="pre">,</span> </span><span class="pre">transformers.configuration_utils.PretrainedConfig</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><span class="pre">transformers4rec.torch.masking.MaskSequence</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#GPT2Prepare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.GPT2Prepare" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.transformer.TransformerPrepare" title="transformers4rec.torch.block.transformer.TransformerPrepare"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.transformer.TransformerPrepare</span></code></a></p>
+<p>TransformerPrepare module for GPT-2.</p>
+<p>This class extends the inputs for GPT-2 with a
+triangular causal mask to the inputs.</p>
+<dl class="py method">
+<dt id="transformers4rec.torch.block.transformer.GPT2Prepare.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_embeds</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#GPT2Prepare.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.GPT2Prepare.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.GPT2Prepare.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.GPT2Prepare.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.transformer.</span></code><code class="sig-name descname"><span class="pre">TransformerBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">transformer:</span> <span class="pre">Union[transformers.modeling_utils.PreTrainedModel,</span> <span class="pre">transformers.configuration_utils.PretrainedConfig],</span> <span class="pre">masking:</span> <span class="pre">Optional[transformers4rec.torch.masking.MaskSequence]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">prepare_module:</span> <span class="pre">Optional[Type[transformers4rec.torch.block.transformer.TransformerPrepare]]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">output_fn=&lt;function</span> <span class="pre">TransformerBlock.&lt;lambda&gt;&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#TransformerBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></code></a></p>
+<p>Class to support HF Transformers for session-based and sequential-based recommendation models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transformer</strong> (<em>TransformerBody</em>) – The T4RecConfig or a pre-trained HF object related to specific transformer architecture.</p></li>
+<li><p><strong>masking</strong> – Needed when masking is applied on the inputs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.TRANSFORMER_TO_PREPARE">
+<code class="sig-name descname"><span class="pre">TRANSFORMER_TO_PREPARE</span></code><em class="property"><span class="pre">:</span> <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.modeling_utils.PreTrainedModel</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.torch.block.transformer.TransformerPrepare" title="transformers4rec.torch.block.transformer.TransformerPrepare"><span class="pre">transformers4rec.torch.block.transformer.TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">{&lt;class</span> <span class="pre">'transformers.models.gpt2.modeling_gpt2.GPT2Model'&gt;:</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.block.transformer.GPT2Prepare'&gt;}</span></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.TRANSFORMER_TO_PREPARE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.transformer">
+<code class="sig-name descname"><span class="pre">transformer</span></code><em class="property"><span class="pre">:</span> <span class="pre">PreTrainedModel</span></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.transformer" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.prepare_module">
+<code class="sig-name descname"><span class="pre">prepare_module</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.torch.block.transformer.TransformerPrepare" title="transformers4rec.torch.block.transformer.TransformerPrepare"><span class="pre">TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.prepare_module" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.from_registry">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_registry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transformer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_model</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_head</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_seq_length</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><span class="pre">transformers4rec.torch.masking.MaskSequence</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#TransformerBlock.from_registry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.from_registry" title="Permalink to this definition"></a></dt>
+<dd><p>Load the HF transformer architecture based on its name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transformer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of the Transformer to use. Possible values are :
+[“reformer”, “gtp2”, “longformer”, “electra”, “albert”, “xlnet”]</p></li>
+<li><p><strong>d_model</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – size of hidden states for Transformers</p></li>
+<li><p><strong>n_head</strong> – Number of attention heads for Transformers</p></li>
+<li><p><strong>n_layer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of layers for RNNs and Transformers”</p></li>
+<li><p><strong>total_seq_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – The maximum sequence length</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_embeds</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#TransformerBlock.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Transformer Models</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#TransformerBlock.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.torch.block">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-transformers4rec.torch.block" title="Permalink to this headline"></a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="transformers4rec.torch.html" class="btn btn-neutral float-left" title="transformers4rec.torch package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="transformers4rec.torch.features.html" class="btn btn-neutral float-right" title="transformers4rec.torch.features package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
