@@ -22,6 +22,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import torch
+import transformers
 from exp_outputs import (
     config_dllogger,
     creates_output_dir,
@@ -32,15 +33,14 @@ from exp_outputs import (
 from merlin.io import Dataset
 from merlin.schema import Tags
 from transf_exp_args import DataArguments, ModelArguments, TrainingArguments
+from transformers import HfArgumentParser, set_seed
+from transformers.trainer_utils import is_main_process
 
-import transformers
 import transformers4rec.torch as t4r
 from merlin_standard_lib import Schema
-from transformers import HfArgumentParser, set_seed
 from transformers4rec.torch import Trainer
 from transformers4rec.torch.utils.data_utils import MerlinDataLoader
 from transformers4rec.torch.utils.examples_utils import wipe_memory
-from transformers.trainer_utils import is_main_process
 
 logger = logging.getLogger(__name__)
 
