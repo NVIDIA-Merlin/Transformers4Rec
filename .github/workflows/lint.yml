@@ -18,4 +18,4 @@ jobs:
         with:
           cache: 'pip'
           cache-dependency-path: '**/**.txt'
-      - uses: pre-commit/action@v2.0.3
+      - uses: pre-commit/action@v3.0.0
