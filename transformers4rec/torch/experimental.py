@@ -97,7 +97,7 @@ class PostContextFusion(TabularBlock):
             output = seq_rep + context_rep
         else:
             raise ValueError(
-                f"The aggregation {self.fusion_aggregation} is not supported,"
+                f"The aggregation {self.fusion_aggregation} is not supported, "
                 f"please select one of the following aggregations "
                 f"['concat', 'elementwise-mul', 'elementwise-sum']"
             )

@@ -224,7 +224,7 @@ def main():
     logger.info(f"Recall@10 of manually masked test data = {str(recall_10)}")
     output_file = os.path.join(training_args.output_dir, "eval_results_over_time.txt")
     with open(output_file, "a") as writer:
-        writer.write(f"\n***** Recall@10 of simulated inference  = {recall_10} *****\n")
+        writer.write(f"\n***** Recall@10 of simulated inference = {recall_10} *****\n")
     # Verify that the recall@10 from train.evaluate() matches the recall@10 calculated manually
     if not isinstance(input_module.masking, t4r.masking.PermutationLanguageModeling):
         # TODO fix inference discrepancy for permutation language modeling
