@@ -94,6 +94,15 @@ get_ipython().run_cell_magic('writefile', '{TRAINER_FILE}', '\nimport argparse\n
 # - <b>per device batch size for training</b>: when using multiple GPUs in DistributedDataParallel mode, you may choose to reduce the batch size in order to keep the total batch size constant. This should help reduce training times.
 # - <b>per device batch size for evaluation</b>: see above
 
+# In[3]:
+
+
+# If only 1 GPU are available, starts a single process to use that GPU
+from torch.cuda import device_count
+num_gpus = device_count()
+NUM_PROCESSES = min(num_gpus, 2)
+
+
 # In[4]:
 
 
@@ -102,7 +111,7 @@ OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/data/preproc_sessions_by_d
 LR = float(os.environ.get("LEARNING_RATE", "0.0005"))
 BATCH_SIZE_TRAIN = int(os.environ.get("BATCH_SIZE_TRAIN", "256"))
 BATCH_SIZE_VALID = int(os.environ.get("BATCH_SIZE_VALID", "128"))
-get_ipython().system('python -m torch.distributed.run --nproc_per_node 2 {TRAINER_FILE} --path {OUTPUT_DIR} --learning-rate {LR} --per-device-train-batch-size {BATCH_SIZE_TRAIN} --per-device-eval-batch-size {BATCH_SIZE_VALID}')
+get_ipython().system('python -m torch.distributed.run --nproc_per_node {NUM_PROCESSES} {TRAINER_FILE} --path {OUTPUT_DIR} --learning-rate {LR} --per-device-train-batch-size {BATCH_SIZE_TRAIN} --per-device-eval-batch-size {BATCH_SIZE_VALID}')
 
 
 # <b>Congratulations!!!</b> You successfully trained your model using 2 GPUs with a `distributed data parallel` approach. If you choose, you may now go back and experiment with some of the hyperparameters (eg. learning rate, batch sizes, number of GPUs) to collect information on various accuracy metrics as well as total training time, to see what fits best into your workflow.
