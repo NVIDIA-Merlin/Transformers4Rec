@@ -30,6 +30,7 @@ import os
 import re
 import subprocess
 import sys
+from datetime import datetime
 from typing import List, cast
 
 from natsort import natsorted
@@ -42,8 +43,13 @@ gitdir = os.path.join(repodir, r".git")
 
 # -- Project information -----------------------------------------------------
 
+year_range = "2021"
+year_now = str(datetime.now().year)
+if year_range != year_now:
+    year_range = year_range + chr(8211) + year_now
+
 project = "Transformers4Rec"
-copyright = "2021, NVIDIA"
+copyright = year_range + ", NVIDIA"
 author = "NVIDIA"
 
 
@@ -108,6 +114,7 @@ html_theme_options = {
 }
 html_copy_source = False
 html_show_sourcelink = False
+html_show_sphinx = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
