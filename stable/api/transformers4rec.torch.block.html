@@ -28,14 +28,7 @@
     <link rel="prev" title="transformers4rec.torch package" href="transformers4rec.torch.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-  <div class="banner">
-    <p class="banner">
-      Beginning in January 2023, versions for all NVIDIA Merlin projects
-      will change from semantic versioning like <code>4.0</code>
-      to calendar versioning like <code>23.01</code>.</p>
-  </div>
-
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -115,7 +108,7 @@
 <dl class="py class">
 <dt id="transformers4rec.torch.block.base.BlockBase">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">BlockBase</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#BlockBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.BlockBase" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.OutputSizeMixin" title="transformers4rec.torch.utils.torch_utils.OutputSizeMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.utils.torch_utils.OutputSizeMixin</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.OutputSizeMixin" title="transformers4rec.torch.utils.torch_utils.OutputSizeMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.utils.torch_utils.OutputSizeMixin</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></a></p>
 <p>A subclass of PyTorch’s torch.nn.Module, providing additional functionality
 for dealing with automatic setting of input/output dimensions of neural networks layers.
 Specifically, It implements the ‘OutputSizeMixin’ for managing output sizes.</p>
@@ -155,14 +148,14 @@ by default None</p>
 
 <dl class="py class">
 <dt id="transformers4rec.torch.block.base.Block">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">Block</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><span class="pre">torch.nn.modules.module.Module</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">torch.Size</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#Block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.Block" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">Block</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><span class="pre">torch.nn.modules.module.Module</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">torch.Size</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#Block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.Block" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></code></a></p>
 <p>Wraps a PyTorch module, allowing it to be used as a block in a T4Rec model.
 It carries the module and its expected output size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – The PyTorch module to be wrapped in this block.</p></li>
+<li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><em>torch.nn.Module</em></a>) – The PyTorch module to be wrapped in this block.</p></li>
 <li><p><strong>output_size</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em>) – The expected output size of the module.</p></li>
 </ul>
 </dd>
@@ -195,7 +188,7 @@ given the input size.</p>
 <dl class="py class">
 <dt id="transformers4rec.torch.block.base.SequentialBlock">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.base.</span></code><code class="sig-name descname"><span class="pre">SequentialBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">torch.Size</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.container.Sequential</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="(in PyTorch v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.container.Sequential</span></code></a></p>
 <p>Extends the module torch.nn.Sequential. It’s used for creating
 a sequence of layers or blocks in a T4Rec model. The modules
 will be applied to inputs in the order they are passed in the constructor.</p>
@@ -215,7 +208,7 @@ By default None</p></li>
 
 <dl class="py method">
 <dt id="transformers4rec.torch.block.base.SequentialBlock.add_module">
-<code class="sig-name descname"><span class="pre">add_module</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><span class="pre">torch.nn.modules.module.Module</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.add_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.add_module" title="Permalink to this definition"></a></dt>
+<code class="sig-name descname"><span class="pre">add_module</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><span class="pre">torch.nn.modules.module.Module</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.add_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.add_module" title="Permalink to this definition"></a></dt>
 <dd><p>Adds a PyTorch module to the sequential block. If a list of strings is provided,
 a <cite>FilterFeatures</cite> block gets added to the sequential block.</p>
 <dl class="field-list simple">
@@ -231,14 +224,14 @@ from this module using the given name.</p></li>
 
 <dl class="py method">
 <dt id="transformers4rec.torch.block.base.SequentialBlock.add_module_and_maybe_build">
-<code class="sig-name descname"><span class="pre">add_module_and_maybe_build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><span class="pre">torch.nn.modules.module.Module</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.add_module_and_maybe_build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.add_module_and_maybe_build" title="Permalink to this definition"></a></dt>
+<code class="sig-name descname"><span class="pre">add_module_and_maybe_build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><span class="pre">torch.nn.modules.module.Module</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#SequentialBlock.add_module_and_maybe_build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.base.SequentialBlock.add_module_and_maybe_build" title="Permalink to this definition"></a></dt>
 <dd><p>Checks if a module needs to be built and adds it to the sequential block.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The name of the child module.</p></li>
-<li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – The child module to be added to the sequential block.</p></li>
-<li><p><strong>parent</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – The parent module.</p></li>
+<li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><em>torch.nn.Module</em></a>) – The child module to be added to the sequential block.</p></li>
+<li><p><strong>parent</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><em>torch.nn.Module</em></a>) – The parent module.</p></li>
 <li><p><strong>idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – The index of the current module in the sequential block.</p></li>
 </ul>
 </dd>
@@ -324,7 +317,7 @@ given the input size.</p>
 <dd><p>Builds a SequentialBlock from a list of PyTorch modules.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>*modules</strong> (<em>List</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a><em>]</em>) – List containing PyTorch modules.</p>
+<dd class="field-odd"><p><strong>*modules</strong> (<em>List</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><em>torch.nn.Module</em></a><em>]</em>) – List containing PyTorch modules.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
@@ -401,7 +394,7 @@ by default True</p></li>
 <li><p><strong>input_shape</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em>) – The shape of the input tensor.</p></li>
 <li><p><strong>in_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of input features.</p></li>
 <li><p><strong>out_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of output features.</p></li>
-<li><p><strong>activation</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a><em>, </em><em>optional</em>) – The activation function to apply after the linear layer.
+<li><p><strong>activation</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><em>torch.nn.Module</em></a><em>, </em><em>optional</em>) – The activation function to apply after the linear layer.
 By default <cite>torch.nn.ReLU</cite>.</p></li>
 <li><p><strong>use_bias</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to use bias in the layer.
 By default True.</p></li>
@@ -426,7 +419,7 @@ By default is None.</p></li>
 <dl class="py class">
 <dt id="transformers4rec.torch.block.transformer.TransformerPrepare">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.block.transformer.</span></code><code class="sig-name descname"><span class="pre">TransformerPrepare</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transformer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.modeling_utils.PreTrainedModel</span><span class="p"><span class="pre">,</span> </span><span class="pre">transformers.configuration_utils.PretrainedConfig</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><span class="pre">transformers4rec.torch.masking.MaskSequence</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#TransformerPrepare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerPrepare" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></a></p>
 <p>Base class to prepare additional inputs to the forward call of
 the HF transformer layer.</p>
 <dl class="field-list simple">
@@ -550,12 +543,21 @@ triangular causal mask to the inputs.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, NVIDIA.</p>
+<p>
+<a href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/" target="_blank">Privacy Policy</a> |
+<a href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/" target="_blank">Manage My Privacy</a> |
+<a href="https://www.nvidia.com/en-us/preferences/start/" target="_blank">Do Not Sell or Share My Data</a> |
+<a href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/" target="_blank">Terms of Service</a> |
+<a href="https://www.nvidia.com/en-us/about-nvidia/accessibility/" target="_blank">Accessibility</a> |
+<a href="https://www.nvidia.com/en-us/about-nvidia/company-policies/" target="_blank">Corporate Policies</a> |
+<a href="https://www.nvidia.com/en-us/product-security/" target="_blank">Product Security</a> |
+<a href="https://www.nvidia.com/en-us/contact/" target="_blank">Contact</a>
+</p>
+
+    <p>&#169; Copyright 2021–2024, NVIDIA.</p>
+
   </div>
 
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
    
 
 </footer>
