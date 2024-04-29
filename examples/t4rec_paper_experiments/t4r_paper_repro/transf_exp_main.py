@@ -203,17 +203,27 @@ def main():
 
     # Truncate input sequences up to last item - 1 to mimic the inference
     def mask_last_interaction(x):
-        return list(x[:-1])
+        x = list(x[:-1])
+        if model_args.plm:
+            x += list([1])
+        return x
 
     list_columns = schema.select_by_tag("list").column_names
     for col in list_columns:
         prediction_data[col] = prediction_data[col].apply(mask_last_interaction)
+
+    max_seq_len = training_args.max_sequence_length
+    if model_args.mlm or model_args.rtd:
+        # Prevent inputs to be larger than max length.
+        # The inputs will be extended by one while masking.
+        max_seq_len -= 1
+
     # Get top-10 predictions
     test_loader = MerlinDataLoader.from_schema(
         schema,
         Dataset(prediction_data),
         training_args.per_device_eval_batch_size,
-        max_sequence_length=training_args.max_sequence_length,
+        max_sequence_length=max_seq_len,
         shuffle=False,
     )
     trainer.test_dataloader = test_loader
@@ -226,9 +236,7 @@ def main():
     with open(output_file, "a") as writer:
         writer.write(f"\n***** Recall@10 of simulated inference = {recall_10} *****\n")
     # Verify that the recall@10 from train.evaluate() matches the recall@10 calculated manually
-    if not isinstance(input_module.masking, t4r.masking.PermutationLanguageModeling):
-        # TODO fix inference discrepancy for permutation language modeling
-        assert np.isclose(recall_10, results_over_time[2]["eval_/next-item/recall_at_10"], rtol=0.1)
+    assert np.isclose(recall_10, results_over_time[2]["eval_/next-item/recall_at_10"], rtol=0.1)
 
 
 def recall(predicted_items: np.ndarray, real_items: np.ndarray) -> float:
