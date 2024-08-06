@@ -212,7 +212,7 @@
 
         <span class="c1"># Compute recalls at K</span>
         <span class="n">num_relevant</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">rel_indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_relevant</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">rel_indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_relevant</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">rel_count</span> <span class="o">=</span> <span class="n">num_relevant</span><span class="p">[</span><span class="n">rel_indices</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">rel_indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
