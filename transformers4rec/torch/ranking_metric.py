@@ -131,7 +131,7 @@ class RecallAt(RankingMetric):
 
         # Compute recalls at K
         num_relevant = torch.sum(labels, dim=-1)
-        rel_indices = (num_relevant != 0).nonzero().squeeze()
+        rel_indices = (num_relevant != 0).nonzero().squeeze(dim=1)
         rel_count = num_relevant[rel_indices]
 
         if rel_indices.shape[0] > 0:

@@ -1,4 +1,9 @@
-Sphinx<3.6
+Sphinx==3.5.4
+sphinxcontrib-applehelp==1.0.4
+sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-htmlhelp==2.0.1
+sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-serializinghtml==1.1.5
 sphinx_rtd_theme==1.0.0
 sphinx-multiversion@git+https://github.com/mikemckiernan/sphinx-multiversion.git
 sphinxcontrib-copydirs@git+https://github.com/mikemckiernan/sphinxcontrib-copydirs.git
@@ -8,4 +13,5 @@ jinja2<3.1
 markupsafe==2.0.1
 natsort==8.0.1
 myst-nb<0.14
+lxml<5.1
 linkify-it-py<1.1

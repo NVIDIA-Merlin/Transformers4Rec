@@ -34,7 +34,7 @@ pip install -r requirements.txt
 ## Get data
 cd t4r_paper_repro
 FEATURE_SCHEMA_PATH=../datasets_configs/ecom_rees46/rees46_schema.pbtxt
-pip install gdown
+pip install gdown==4.6.0
 gdown https://drive.google.com/uc?id=1NCFZ5ya3zyxPsrmupEoc9UEm4sslAddV
 apt-get update -y
 apt-get install unzip -y
