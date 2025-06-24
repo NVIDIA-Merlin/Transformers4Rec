@@ -8,7 +8,7 @@ import pickle  # nosec B403
 # If a class is needed by ZMQ routinely it should be added here. If
 # it is only needed in a single instance the class can be added at runtime
 # using register_approved_ipc_class.
-BASE_ZMQ_CLASSES = {
+BASE_SERIALIZATION_CLASSES = {
     "builtins": [
         "Exception", "ValueError", "NotImplementedError", "AttributeError",
         "AssertionError"
@@ -73,13 +73,13 @@ def _register_class(dict, obj):
     if name is None:
         name = obj.__name__
     module = pickle.whichmodule(obj, name)
-    if module not in BASE_ZMQ_CLASSES.keys():
-        BASE_ZMQ_CLASSES[module] = []
-    BASE_ZMQ_CLASSES[module].append(name)
+    if module not in BASE_SERIALIZATION_CLASSES.keys():
+        BASE_SERIALIZATION_CLASSES[module] = []
+    BASE_SERIALIZATION_CLASSES[module].append(name)
 
 
 def register_approved_ipc_class(obj):
-    _register_class(BASE_ZMQ_CLASSES, obj)
+    _register_class(BASE_SERIALIZATION_CLASSES, obj)
 
 
 class Unpickler(pickle.Unpickler):
@@ -87,7 +87,7 @@ class Unpickler(pickle.Unpickler):
     def __init__(self, *args, approved_imports={}, **kwargs):
         super().__init__(*args, **kwargs)
         self.approved_imports = approved_imports
-        self.approved_imports.update(BASE_ZMQ_CLASSES)
+        self.approved_imports.update(BASE_SERIALIZATION_CLASSES)
 
     # only import approved classes, this is the security boundary.
     def find_class(self, module, name):

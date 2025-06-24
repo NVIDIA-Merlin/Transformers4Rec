@@ -94,7 +94,6 @@ class TransformerBlock(BlockBase):
         transformer: TransformerBody,
         masking: Optional[MaskSequence] = None,
         prepare_module: Optional[Type[TransformerPrepare]] = None,
-        # output_fn=lambda model_outputs: model_outputs[0],
     ):
         super().__init__()
 
@@ -140,7 +139,6 @@ class TransformerBlock(BlockBase):
             prepare_module = self.TRANSFORMER_TO_PREPARE[type(self.transformer)]
         if prepare_module:
             self.prepare_module = prepare_module(self.transformer, self.masking)
-        # self.output_fn = output_fn
 
     @classmethod
     def from_registry(
@@ -195,7 +193,6 @@ class TransformerBlock(BlockBase):
             if param in transformer_kwargs:
                 filtered_transformer_kwargs[param] = transformer_kwargs[param]
         model_outputs = self.transformer(**filtered_transformer_kwargs)
-        # outputs = self.output_fn(model_outputs)
         outputs = model_outputs[0]
 
         # TODO: store the attention outputs for meta-data logging
