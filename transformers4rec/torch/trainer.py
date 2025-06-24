@@ -44,6 +44,7 @@ from .model.base import Model
 from .model.prediction_task import NextItemPredictionTask
 from .utils.data_utils import T4RecDataLoader
 from .utils.torch_utils import nested_concat, nested_detach, nested_numpify, nested_truncate
+from ..utils.serialization import load
 
 logger = logging.get_logger(__name__)
 
@@ -739,12 +740,8 @@ class Trainer(BaseTrainer):
         import os
 
         if model is None:
-            try:
-                import cloudpickle
-            except ImportError:
-                raise ImportError("cloudpickle is required to load model class")
             logger.info("Loading model class")
-            model = cloudpickle.load(
+            model = load(
                 open(os.path.join(checkpoint_path, "t4rec_model_class.pkl"), "rb")
             )
 
