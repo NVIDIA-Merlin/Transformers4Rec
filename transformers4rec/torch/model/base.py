@@ -39,10 +39,15 @@ from ..features.sequence import TabularFeaturesType
 from ..typing import TabularData
 from ..utils.padding import pad_inputs
 from ..utils.torch_utils import LossMixin, MetricsMixin
+from ...utils.serialization import load, dump
 
 
 def name_fn(name, inp):
     return "/".join([name, inp]) if name else None
+
+
+def forward_to_prediction_fn(predictions):
+    return predictions
 
 
 class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
@@ -79,7 +84,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         metrics: Iterable[tm.Metric] = None,
         target_name: Optional[str] = None,
         task_name: Optional[str] = None,
-        forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor] = lambda x: x,
+        forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor] = forward_to_prediction_fn,
         task_block: Optional[BlockType] = None,
         pre: Optional[BlockType] = None,
         summary_type: str = "last",
@@ -265,7 +270,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             for i, task in enumerate(prediction_tasks):
                 self.prediction_task_dict[task.task_name] = task
 
-        self._task_weights = defaultdict(lambda: 1.0)
+        self._task_weights = defaultdict()
         if task_weights:
             for task, val in zip(cast(List[PredictionTask], prediction_tasks), task_weights):
                 self._task_weights[task.task_name] = val
@@ -281,7 +286,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         device
         task_blocks
         """
-        if not getattr(self.body, "output_size", lambda: None)():
+        if not getattr(self.body, "output_size", None)():
             raise ValueError(
                 "Can't infer output-size of the body, please provide  "
                 "a `Block` with a output-size. You can wrap any torch.Module in a Block."
@@ -397,7 +402,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
                 )
                 labels[name] = task_output["labels"]
                 predictions[name] = task_output["predictions"]
-                losses.append(task_output["loss"] * self._task_weights[name])
+                losses.append(task_output["loss"] * self._task_weights.get(name, 1.0))
             loss_tensor = torch.stack(losses)
             loss = getattr(loss_tensor, self.loss_reduction)()
             outputs = {"loss": loss, "labels": labels, "predictions": predictions}
@@ -833,7 +838,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         return [task for head in self.heads for task in list(head.prediction_task_dict.values())]
 
     def save(self, path: Union[str, os.PathLike], model_name="t4rec_model_class"):
-        """Saves the model to f"{export_path}/{model_name}.pkl" using `cloudpickle`
+        """Saves the model to f"{export_path}/{model_name}.pkl" `
         Parameters
         ----------
         path : Union[str, os.PathLike]
@@ -842,10 +847,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
            the name given to the pickle file storing the T4Rec model,
             by default 't4rec_model_class'
         """
-        try:
-            import cloudpickle
-        except ImportError:
-            raise ValueError("cloudpickle is required to save model class")
 
         export_path = pathlib.Path(path)
         export_path.mkdir(exist_ok=True)
@@ -853,7 +854,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         model_name = model_name + ".pkl"
         export_path = export_path / model_name
         with open(export_path, "wb") as out:
-            cloudpickle.dump(self, out)
+            dump(self, out)
 
     @classmethod
     def load(cls, path: Union[str, os.PathLike], model_name="t4rec_model_class") -> "Model":
@@ -866,15 +867,11 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
            the name given to the pickle file storing the T4Rec model,
             by default 't4rec_model_class'.
         """
-        try:
-            import cloudpickle
-        except ImportError:
-            raise ValueError("cloudpickle is required to load T4Rec model")
 
         export_path = pathlib.Path(path)
         model_name = model_name + ".pkl"
         export_path = export_path / model_name
-        return cloudpickle.load(open(export_path, "rb"))
+        return load(open(export_path, "rb"))
 
 
 def _output_metrics(metrics):
