@@ -543,6 +543,21 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.top_k = top_k
 
     def forward(self, inputs: TabularData, targets=None, training=False, testing=False, **kwargs):
+        model_expected_features = set(self.input_schema.column_names)
+        call_input_features = set(inputs.keys())
+        if not (training or testing) and model_expected_features != call_input_features:
+            raise ValueError(
+                "Model forward called with different set of features "
+                "compared with the input schema it was configured with "
+                "Please check that the inputs passed to the model are only  "
+                "those required by the model."
+                f"\nModel expected features:\n\t{model_expected_features}"
+                f"\nCall input features:\n\t{call_input_features}"
+                f"\nFeatures expected by model input schema only:"
+                f"\n\t{model_expected_features.difference(call_input_features)}"
+                f"\nFeatures provided in inputs only:"
+                f"\n\t{call_input_features.difference(model_expected_features)}"
+            )
         # Convert inputs to float32 which is the default type, expected by PyTorch
         for name, val in inputs.items():
             if torch.is_floating_point(val):
