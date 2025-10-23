@@ -750,11 +750,11 @@ class Trainer(BaseTrainer):
         # Restoring model weights
         self.model.load_state_dict(
             # torch.load(os.path.join(training_args.output_dir, "pytorch_model.bin"))
-            torch.load(os.path.join(checkpoint_path, "pytorch_model.bin"))
+            load(os.path.join(checkpoint_path, "pytorch_model.bin"), torch_load=True)
         )
         # Restoring random state
         rng_file = os.path.join(checkpoint_path, "rng_state.pth")
-        checkpoint_rng_state = torch.load(rng_file)
+        checkpoint_rng_state = load(rng_file, torch_load=True)
         random.setstate(checkpoint_rng_state["python"])
         np.random.set_state(checkpoint_rng_state["numpy"])
         torch.random.set_rng_state(checkpoint_rng_state["cpu"])

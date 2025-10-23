@@ -115,13 +115,17 @@ def load(file,
          encoding="ASCII",
          errors="strict",
          buffers=None,
-         approved_imports={}):
-    return Unpickler(file,
+         approved_imports={},
+         torch_load=False):
+    result = Unpickler(file,
                      fix_imports=fix_imports,
                      buffers=buffers,
                      encoding=encoding,
                      errors=errors,
                      approved_imports=approved_imports).load()
+    if torch_load:
+        result = torch.load(file)
+    return result
 
 
 def loads(s,
