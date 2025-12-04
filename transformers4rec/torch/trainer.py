@@ -761,7 +761,10 @@ class Trainer(BaseTrainer):
         torch.cuda.random.set_rng_state_all(checkpoint_rng_state["cuda"])
         # Restoring AMP scaler
         if self._use_cuda_amp:
-            self.scaler.load_state_dict(torch.load(os.path.join(checkpoint_path, "scaler.pt")))
+            self.scaler.load_state_dict(
+                # torch.load(os.path.join(checkpoint_path, "scaler.pt"))
+                load(os.path.join(checkpoint_path, "scaler.pt"), torch_load=True)
+            )
 
     @property
     def log_predictions_callback(self) -> Callable:
