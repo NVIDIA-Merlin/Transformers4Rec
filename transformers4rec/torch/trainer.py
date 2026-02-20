@@ -121,7 +121,7 @@ class Trainer(BaseTrainer):
 
         self.compute_metrics = compute_metrics
         self.train_dataset_or_path = train_dataset_or_path
-        self.eval_dataset_or_path = eval_dataset_or_path
+        self.eval_dataset_or_path = eval_dataset_or_path 
         self.test_dataset_or_path = test_dataset_or_path
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
@@ -723,48 +723,28 @@ class Trainer(BaseTrainer):
             # TODO : fix serialization of DatasetSchema object
             self.model.save(output_dir)
 
-    def load_model_trainer_states_from_checkpoint(self, checkpoint_path, model=None):
+    def load_model_trainer_states_from_checkpoint(self, model, scaler=None):
         """
-        This method loads the checkpoints states of the model, trainer and random states.
-        If model is None the serialized model class is loaded from checkpoint.
-        It does not loads the optimizer and LR scheduler states (for that call trainer.train()
-        with resume_from_checkpoint argument for a complete load)
+        This method loads the a supplied pytorch model, random states and 
+        AMP scaler state into the trainer class. This is useful when resuming 
+        training from a checkpoint or for loading a trained model for inference.
+        Make sure to set the rng seed to the same value as the one used for 
+        training when resuming training from a checkpoint, to ensure that the 
+        random states are correctly restored.
 
         Parameters
         ----------
-        checkpoint_path: str
-            Path to the checkpoint directory.
-        model: Optional[Model]
-            Model class used by Trainer. by default None
+        model: torch.nn.Module
+            The PyTorch model to load the weights into.
+        scaler: torch.cuda.amp.GradScaler, optional
+            The AMP GradScaler to load the state into, if using CUDA AMP.
+            by default None
         """
-        import os
-
-        if model is None:
-            logger.info("Loading model class")
-            model = load(
-                open(os.path.join(checkpoint_path, "t4rec_model_class.pkl"), "rb")
-            )
-
         self.model = model
-        logger.info("Loading weights of previously trained model")
-        # Restoring model weights
-        self.model.load_state_dict(
-            # torch.load(os.path.join(training_args.output_dir, "pytorch_model.bin"))
-            load(os.path.join(checkpoint_path, "pytorch_model.bin"), torch_load=True)
-        )
-        # Restoring random state
-        rng_file = os.path.join(checkpoint_path, "rng_state.pth")
-        checkpoint_rng_state = load(rng_file, torch_load=True)
-        random.setstate(checkpoint_rng_state["python"])
-        np.random.set_state(checkpoint_rng_state["numpy"])
-        torch.random.set_rng_state(checkpoint_rng_state["cpu"])
-        torch.cuda.random.set_rng_state_all(checkpoint_rng_state["cuda"])
-        # Restoring AMP scaler
-        if self._use_cuda_amp:
-            self.scaler.load_state_dict(
-                # torch.load(os.path.join(checkpoint_path, "scaler.pt"))
-                load(os.path.join(checkpoint_path, "scaler.pt"), torch_load=True)
-            )
+
+        if self._use_cuda_amp and scaler is not None:
+            self.scaler = scaler
+
 
     @property
     def log_predictions_callback(self) -> Callable:

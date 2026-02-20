@@ -2,7 +2,6 @@ import io
 # pickle is not secure, but but this whole file is a wrapper to make it
 # possible to mitigate the primary risk of code injection via pickle.
 import pickle  # nosec B403
-# import cloudpickle
 
 # These are the base classes that are generally serialized by the ZeroMQ IPC.
 # If a class is needed by ZMQ routinely it should be added here. If
@@ -123,8 +122,7 @@ def load(file,
                      encoding=encoding,
                      errors=errors,
                      approved_imports=approved_imports).load()
-    if torch_load:
-        result = torch.load(file)
+
     return result
 
 
