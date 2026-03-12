@@ -918,6 +918,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             model.load_state_dict(state_dict, strict=strict)
         else:
             raise ValueError("`state_dict` must be a dictionary of parameter (torch) tensors.")
+
         return model
 
 
