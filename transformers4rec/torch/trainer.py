@@ -44,7 +44,6 @@ from .model.base import Model
 from .model.prediction_task import NextItemPredictionTask
 from .utils.data_utils import T4RecDataLoader
 from .utils.torch_utils import nested_concat, nested_detach, nested_numpify, nested_truncate
-from ..utils.serialization import load
 
 logger = logging.get_logger(__name__)
 

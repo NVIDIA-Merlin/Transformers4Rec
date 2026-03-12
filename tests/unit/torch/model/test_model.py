@@ -419,9 +419,16 @@ def test_save_next_item_prediction_model(
 
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir)
-        assert "t4rec_model_class.pkl" in os.listdir(tmpdir)
-        loaded_model = model.load(tmpdir)
-        # instead of a dictionary of three tensors `loss, labels, and predictions`
+        assert "t4rec_model_class.pt" in os.listdir(tmpdir)
+
+        # The caller loads the state dict and reconstructs the architecture.
+        state_dict = torch.load(os.path.join(tmpdir, "t4rec_model_class.pt"))
+
+    # Reconstruct the same architecture (inputs + task + config) then load weights.
+    inputs2 = torch_yoochoose_tabular_transformer_features
+    task2 = tr.NextItemPredictionTask(weight_tying=True)
+    new_model = transformer_config.to_torch_model(inputs2, task2)
+    loaded_model = tr.Model.load(state_dict, new_model.heads)
 
     output = loaded_model(torch_yoochoose_like)
     assert isinstance(output, torch.Tensor)
