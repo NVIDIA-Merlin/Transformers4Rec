@@ -39,7 +39,6 @@ from ..features.sequence import TabularFeaturesType
 from ..typing import TabularData
 from ..utils.padding import pad_inputs
 from ..utils.torch_utils import LossMixin, MetricsMixin
-from ...utils.serialization import load, dump
 
 
 def name_fn(name, inp):
@@ -838,40 +837,85 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         return [task for head in self.heads for task in list(head.prediction_task_dict.values())]
 
     def save(self, path: Union[str, os.PathLike], model_name="t4rec_model_class"):
-        """Saves the model to f"{export_path}/{model_name}.pkl" `
+        """Saves the model state dict to f"{path}/{model_name}.pt".
+
+        Only the model weights (state dict) are saved. The model architecture
+        (heads, optimizer, etc.) must be reconstructed by the caller before
+        loading weights back with :meth:`Model.load`.
+
         Parameters
         ----------
         path : Union[str, os.PathLike]
-            Path to the directory where the T4Rec model should be saved.
+            Path to the directory where the model state dict should be saved.
         model_name : str, optional
-           the name given to the pickle file storing the T4Rec model,
-            by default 't4rec_model_class'
+            The name given to the state dict file, by default 't4rec_model_class'.
         """
-
         export_path = pathlib.Path(path)
         export_path.mkdir(exist_ok=True)
-
-        model_name = model_name + ".pkl"
-        export_path = export_path / model_name
-        with open(export_path, "wb") as out:
-            dump(self, out)
+        torch.save(self.state_dict(), export_path / (model_name + ".pt"))
 
     @classmethod
-    def load(cls, path: Union[str, os.PathLike], model_name="t4rec_model_class") -> "Model":
-        """Loads a T4Rec model that was saved with `model.save()`.
+    def load(
+        cls,
+        state_dict: Dict[str, torch.Tensor],
+        heads: Union[List["Head"], "Head"],
+        head_weights: Optional[List[float]] = None,
+        head_reduction: str = "mean",
+        optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
+        name: str = None,
+        max_sequence_length: Optional[int] = None,
+        top_k: Optional[int] = None,
+        strict: bool = True,
+    ) -> "Model":
+        """Construct a Model from a pre-loaded state dict and already-built heads.
+
+        No file I/O is performed by this method. The caller is responsible for
+        loading the state dict from whatever storage backend they use (e.g. via
+        ``torch.load``) and for constructing the model architecture (heads) before
+        calling this method.
+
         Parameters
         ----------
-        path : Union[str, os.PathLike]
-            Path to the directory where the T4Rec model is saved.
-        model_name : str, optional
-           the name given to the pickle file storing the T4Rec model,
-            by default 't4rec_model_class'.
-        """
+        state_dict : Dict[str, torch.Tensor]
+            The model weights, as returned by ``model.state_dict()`` or loaded
+            externally (e.g. ``torch.load("state_dict.pt")``).
+        heads : Union[List[Head], Head]
+            One or more fully-constructed :class:`Head` instances that define the
+            model architecture. Weights will be loaded into these modules via
+            ``load_state_dict``.
+        head_weights : List[float], optional
+            Per-head loss weights. See :class:`Model.__init__`.
+        head_reduction : str, optional
+            How to reduce multiple head losses, by default ``"mean"``.
+        optimizer : Type[torch.optim.Optimizer], optional
+            Optimizer class, by default ``torch.optim.Adam``.
+        name : str, optional
+            Optional model name.
+        max_sequence_length : int, optional
+            Maximum sequence length for input padding.
+        top_k : int, optional
+            Number of top items to return at inference time.
+        strict : bool, optional
+            Passed to ``load_state_dict``. When ``True`` (default) the keys in
+            ``state_dict`` must exactly match the model parameters.
 
-        export_path = pathlib.Path(path)
-        model_name = model_name + ".pkl"
-        export_path = export_path / model_name
-        return load(open(export_path, "rb"))
+        Returns
+        -------
+        Model
+        """
+        if not isinstance(heads, (list, torch.nn.ModuleList)):
+            heads = [heads]
+        model = cls(
+            *heads,
+            head_weights=head_weights,
+            head_reduction=head_reduction,
+            optimizer=optimizer,
+            name=name,
+            max_sequence_length=max_sequence_length,
+            top_k=top_k,
+        )
+        model.load_state_dict(state_dict, strict=strict)
+        return model
 
 
 def _output_metrics(metrics):
