@@ -163,7 +163,8 @@ class TabularFeatures(MergeTabular):
             None,
             None,
         )
-
+        processed_features = []
+  
         if continuous_tags:
             if continuous_soft_embeddings:
                 maybe_continuous_module = cls.SOFT_EMBEDDING_MODULE_CLASS.from_schema(
@@ -175,14 +176,29 @@ class TabularFeatures(MergeTabular):
                 maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
                     schema, tags=continuous_tags, **kwargs
                 )
+            processed_features.extend(schema.select_by_tag(continuous_tags).column_names)
         if categorical_tags:
             maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(
                 schema, tags=categorical_tags, **kwargs
             )
+            processed_features.extend(schema.select_by_tag(categorical_tags).column_names)
         if pretrained_embeddings_tags:
             maybe_pretrained_module = cls.PRETRAINED_EMBEDDING_MODULE_CLASS.from_schema(
                 schema, tags=pretrained_embeddings_tags, **kwargs
             )
+            processed_features.extend(schema.select_by_tag(pretrained_embeddings_tags).column_names)
+
+        unprocessed_features = set(schema.column_names).difference(set(processed_features))
+        if unprocessed_features:
+            raise ValueError(
+                "Schema provided to `TabularFeatures` includes features "
+                "without any of the following tags: "
+                f"continuous ({continuous_tags}), categorical ({categorical_tags}), "
+                f"or pretrained embeddings ({pretrained_embeddings_tags}). "
+                "Please ensure all columns have one of these tags "
+                "or are excluded from the schema. "
+                f"\nUnproceesed features: {unprocessed_features} "
+       
 
         output = cls(
             continuous_module=maybe_continuous_module,
