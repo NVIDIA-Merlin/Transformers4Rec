@@ -914,7 +914,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             max_sequence_length=max_sequence_length,
             top_k=top_k,
         )
-        if isinstance(state_dict, Dict[str, torch.Tensor]):
+        if isinstance(state_dict, dict):
             model.load_state_dict(state_dict, strict=strict)
         else:
             raise ValueError("`state_dict` must be a dictionary of parameter (torch) tensors.")
