@@ -398,6 +398,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         cats = cats or []
         conts = conts or []
         labels = labels or []
+        lists = lists or []
 
         schema = schema.select_by_name(conts + cats + labels + lists)
 
