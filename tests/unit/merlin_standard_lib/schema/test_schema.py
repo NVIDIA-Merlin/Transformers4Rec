@@ -19,6 +19,16 @@ from merlin_standard_lib import categorical_cardinalities
 from merlin_standard_lib.schema import schema
 
 
+def _nested_struct_schema_json(depth: int) -> str:
+    open_part = '{"name":"s","type":"STRUCT","structDomain":{"feature":['
+    close_part = "]}}"
+    leaf = (
+        '{"name":"leaf","type":"INT",'
+        '"intDomain":{"name":"leaf","max":"5","isCategorical":true}}'
+    )
+    return '{"feature":[' + open_part * depth + leaf + close_part * depth + "]}"
+
+
 def test_column_proto_txt():
     col = schema.ColumnSchema(name="qa")
 
@@ -62,6 +72,18 @@ def test_column_schema_categorical_with_shape():
     assert col.shape.dim[0].size == 1
 
     assert categorical_cardinalities(schema.Schema([col])) == dict(cat_1=1000 + 1)
+
+
+def test_schema_from_json_rejects_deep_struct_nesting():
+    payload = _nested_struct_schema_json(100)
+    with pytest.raises(ValueError, match="struct nesting exceeds max depth"):
+        schema.Schema().from_json(payload)
+
+
+def test_schema_from_json_accepts_shallow_struct_nesting():
+    payload = _nested_struct_schema_json(5)
+    loaded = schema.Schema().from_json(payload)
+    assert len(loaded.column_names) == 1
 
 
 def test_column_schema_categorical_with_value_count():
