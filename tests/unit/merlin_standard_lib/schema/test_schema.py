@@ -84,6 +84,17 @@ def test_schema_from_json_accepts_shallow_struct_nesting():
     payload = _nested_struct_schema_json(5)
     loaded = schema.Schema().from_json(payload)
     assert len(loaded.column_names) == 1
+def test_categorical_cardinalities_rejects_oversized_schema():
+    col = schema.ColumnSchema.create_categorical("huge_cat", 10**9 - 1)
+    with pytest.raises(ValueError, match="exceeds max_cardinality"):
+        categorical_cardinalities(schema.Schema([col]))
+
+
+def test_categorical_cardinalities_respects_max_cardinality_override():
+    col = schema.ColumnSchema.create_categorical("huge_cat", 10**9 - 1)
+    assert categorical_cardinalities(schema.Schema([col]), max_cardinality=10**12) == {
+        "huge_cat": 10**9
+    }
 
 
 def test_column_schema_categorical_with_value_count():

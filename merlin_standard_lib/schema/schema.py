@@ -605,13 +605,43 @@ def _proto_text_to_better_proto(
         ) from e
 
 
-def categorical_cardinalities(schema) -> Dict[str, int]:
-    if isinstance(schema, CoreSchema):
-        return mm_schema_utils.categorical_cardinalities(schema)
+# Default ~10M embeddings; override via env for large-catalog deployments.
+_MAX_CATEGORICAL_CARDINALITY = int(
+    os.environ.get("T4REC_MAX_CATEGORICAL_CARDINALITY", "10000000")
+)
 
-    outputs = {}
-    for col in schema:
-        if col.int_domain and col.int_domain.is_categorical:
-            outputs[col.name] = col.int_domain.max + 1
 
+def get_max_categorical_cardinality(max_cardinality: Optional[int] = None) -> int:
+    if max_cardinality is not None:
+        return max_cardinality
+    return _MAX_CATEGORICAL_CARDINALITY
+
+
+def _validate_categorical_cardinalities(
+    outputs: Dict[str, int], limit: int
+) -> Dict[str, int]:
+    for name, card in outputs.items():
+        if card < 1:
+            raise ValueError(f"Invalid cardinality for {name!r}: {card}")
+        if card > limit:
+            raise ValueError(
+                f"Categorical cardinality for {name!r} is {card}, which exceeds "
+                f"max_cardinality={limit}. Raise T4REC_MAX_CATEGORICAL_CARDINALITY "
+                f"or pass max_cardinality= if this catalog size is intentional."
+            )
     return outputs
+
+
+def categorical_cardinalities(
+    schema, max_cardinality: Optional[int] = None
+) -> Dict[str, int]:
+    if isinstance(schema, CoreSchema):
+        outputs = mm_schema_utils.categorical_cardinalities(schema)
+    else:
+        outputs = {}
+        for col in schema:
+            if col.int_domain and col.int_domain.is_categorical:
+                outputs[col.name] = col.int_domain.max + 1
+
+    limit = get_max_categorical_cardinality(max_cardinality)
+    return _validate_categorical_cardinalities(outputs, limit)

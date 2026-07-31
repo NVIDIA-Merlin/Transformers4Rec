@@ -22,6 +22,7 @@ from merlin.models.utils.doc_utils import docstring_parameter
 from merlin.schema import Tags, TagsType
 
 from merlin_standard_lib import Schema, categorical_cardinalities
+from merlin_standard_lib.schema.schema import get_max_categorical_cardinality
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 from ..block.base import SequentialBlock
@@ -447,6 +448,13 @@ class TableConfig:
     ):
         if not isinstance(vocabulary_size, int) or vocabulary_size < 1:
             raise ValueError("Invalid vocabulary_size {}.".format(vocabulary_size))
+
+        max_vocab = get_max_categorical_cardinality()
+        if vocabulary_size > max_vocab:
+            raise ValueError(
+                f"vocabulary_size {vocabulary_size} exceeds max_cardinality={max_vocab}. "
+                "Raise T4REC_MAX_CATEGORICAL_CARDINALITY if this catalog size is intentional."
+            )
 
         if not isinstance(dim, int) or dim < 1:
             raise ValueError("Invalid dim {}.".format(dim))
