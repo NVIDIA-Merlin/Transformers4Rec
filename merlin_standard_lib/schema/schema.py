@@ -393,11 +393,19 @@ class Schema(_Schema):
         return item_id_col.column_names[0]
 
     def from_json(self, value: Union[str, bytes]) -> "Schema":
-        if os.path.isfile(value):
+        if isinstance(value, str) and os.path.isfile(value):
             with open(value, "rb") as f:
-                value = f.read()
+                payload = f.read()
+        else:
+            payload = value
 
-        return super().from_json(value)
+        _assert_schema_json_depth(payload)
+        try:
+            return super().from_json(payload)
+        except RecursionError as e:
+            raise ValueError(
+                "Schema nesting too deep (recursion limit hit while parsing)."
+            ) from e
 
     def to_proto_text(self) -> str:
         from tensorflow_metadata.proto.v0 import schema_pb2
@@ -516,6 +524,54 @@ class Schema(_Schema):
         return result
 
 
+_MAX_SCHEMA_NESTING_DEPTH = int(os.environ.get("T4REC_MAX_SCHEMA_NESTING_DEPTH", "64"))
+
+
+def _struct_nesting_depth(node: Any, depth: int = 0) -> int:
+    """Max nesting of Feature -> structDomain -> feature chains."""
+    if depth > _MAX_SCHEMA_NESTING_DEPTH:
+        return depth
+    if not isinstance(node, dict):
+        return depth
+
+    struct = node.get("structDomain") or node.get("struct_domain") or {}
+    features = []
+    if isinstance(struct, dict):
+        features = struct.get("feature") or []
+
+    max_d = depth
+    for child in features:
+        max_d = max(max_d, _struct_nesting_depth(child, depth + 1))
+    return max_d
+
+
+def _assert_schema_dict_depth(data: dict) -> None:
+    features = data.get("feature") or []
+    for feat in features:
+        if _struct_nesting_depth(feat) > _MAX_SCHEMA_NESTING_DEPTH:
+            raise ValueError(
+                f"Schema struct nesting exceeds max depth "
+                f"{_MAX_SCHEMA_NESTING_DEPTH}. Rejecting input."
+            )
+
+
+def _assert_schema_json_depth(value: Union[str, bytes]) -> None:
+    if isinstance(value, bytes):
+        text = value.decode("utf-8")
+    elif isinstance(value, str):
+        text = value
+    else:
+        return
+
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return
+
+    if isinstance(data, dict):
+        _assert_schema_dict_depth(data)
+
+
 def _proto_text_to_better_proto(
     better_proto_message: ProtoMessageType, path_proto_text: str, message: ProtoMessage
 ) -> ProtoMessageType:
@@ -524,18 +580,29 @@ def _proto_text_to_better_proto(
         with open(path_proto_text, "r") as f:
             proto_text = f.read()
 
-    proto = text_format.Parse(proto_text, message)
+    try:
+        proto = text_format.Parse(proto_text, message)
+    except RecursionError as e:
+        raise ValueError(
+            "Schema nesting too deep (recursion limit hit while parsing)."
+        ) from e
 
     # This is a hack because as of now we can't parse the Any representation.
     # TODO: Fix this.
     d = json_format.MessageToDict(proto)
+    _assert_schema_dict_depth(d)
     for f in d["feature"]:
         if "extraMetadata" in f["annotation"]:  # type: ignore
             extra_metadata = f["annotation"].pop("extraMetadata")  # type: ignore
             f["annotation"]["comment"] = [json.dumps(extra_metadata[0]["value"])]  # type: ignore
     json_str = json_format.MessageToJson(json_format.ParseDict(d, message))
 
-    return better_proto_message.__class__().from_json(json_str)
+    try:
+        return better_proto_message.__class__().from_json(json_str)
+    except RecursionError as e:
+        raise ValueError(
+            "Schema nesting too deep (recursion limit hit while parsing)."
+        ) from e
 
 
 # Default ~10M embeddings; override via env for large-catalog deployments.
