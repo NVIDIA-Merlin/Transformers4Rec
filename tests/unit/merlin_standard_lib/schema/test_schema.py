@@ -29,6 +29,13 @@ def _nested_struct_schema_json(depth: int) -> str:
     return '{"feature":[' + open_part * depth + leaf + close_part * depth + "]}"
 
 
+def _nested_struct_schema_proto_text(depth: int) -> str:
+    node = 'name: "leaf"\ntype: INT\n'
+    for _ in range(depth):
+        node = 'name: "s"\ntype: STRUCT\nstruct_domain {\nfeature {\n' + node + "}\n}\n"
+    return "feature {\n" + node + "}\n"
+
+
 def test_column_proto_txt():
     col = schema.ColumnSchema(name="qa")
 
@@ -78,6 +85,18 @@ def test_schema_from_json_rejects_deep_struct_nesting():
     payload = _nested_struct_schema_json(100)
     with pytest.raises(ValueError, match="struct nesting exceeds max depth"):
         schema.Schema().from_json(payload)
+
+
+def test_schema_from_json_rejects_extreme_nesting_before_json_parsing():
+    payload = _nested_struct_schema_json(2_000)
+    with pytest.raises(ValueError, match="serialized nesting exceeds"):
+        schema.Schema().from_json(payload)
+
+
+def test_schema_from_proto_text_rejects_deep_struct_nesting_before_parsing():
+    payload = _nested_struct_schema_proto_text(200)
+    with pytest.raises(ValueError, match="serialized nesting exceeds"):
+        schema.Schema().from_proto_text(payload)
 
 
 def test_schema_from_json_accepts_shallow_struct_nesting():

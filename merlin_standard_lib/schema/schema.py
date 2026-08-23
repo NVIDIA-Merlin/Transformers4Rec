@@ -399,8 +399,8 @@ class Schema(_Schema):
         else:
             payload = value
 
-        _assert_schema_json_depth(payload)
         try:
+            _assert_schema_json_depth(payload)
             return super().from_json(payload)
         except RecursionError as e:
             raise ValueError(
@@ -525,6 +525,10 @@ class Schema(_Schema):
 
 
 _MAX_SCHEMA_NESTING_DEPTH = int(os.environ.get("T4REC_MAX_SCHEMA_NESTING_DEPTH", "64"))
+# A Feature -> structDomain -> feature chain uses up to three serialized
+# containers per logical struct level. Keep the streaming preflight above that
+# allowance while still staying well below Python's default recursion limit.
+_MAX_SERIALIZED_SCHEMA_NESTING_DEPTH = 3 * _MAX_SCHEMA_NESTING_DEPTH + 16
 
 
 def _struct_nesting_depth(node: Any, depth: int = 0) -> int:
@@ -555,7 +559,10 @@ def _assert_schema_dict_depth(data: dict) -> None:
             )
 
 
-def _assert_schema_json_depth(value: Union[str, bytes]) -> None:
+def _assert_serialized_schema_depth(
+    value: Union[str, bytes], opening: str, closing: str, allow_comments: bool = False
+) -> None:
+    """Reject deeply nested serialized schemas without recursively parsing them."""
     if isinstance(value, bytes):
         text = value.decode("utf-8")
     elif isinstance(value, str):
@@ -563,13 +570,48 @@ def _assert_schema_json_depth(value: Union[str, bytes]) -> None:
     else:
         return
 
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError:
-        return
+    depth = 0
+    in_string: Optional[str] = None
+    escaped = False
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == in_string:
+                in_string = None
+        elif char in ('"', "'"):
+            in_string = char
+        elif allow_comments and char == "#":
+            next_newline = text.find("\n", index)
+            index = len(text) if next_newline == -1 else next_newline
+        elif allow_comments and text.startswith("//", index):
+            next_newline = text.find("\n", index + 2)
+            index = len(text) if next_newline == -1 else next_newline
+        elif allow_comments and text.startswith("/*", index):
+            comment_end = text.find("*/", index + 2)
+            index = len(text) if comment_end == -1 else comment_end + 1
+        elif char in opening:
+            depth += 1
+            if depth > _MAX_SERIALIZED_SCHEMA_NESTING_DEPTH:
+                raise ValueError(
+                    f"Schema serialized nesting exceeds max depth "
+                    f"{_MAX_SERIALIZED_SCHEMA_NESTING_DEPTH}. Rejecting input."
+                )
+        elif char in closing:
+            depth = max(depth - 1, 0)
+        index += 1
 
-    if isinstance(data, dict):
-        _assert_schema_dict_depth(data)
+
+def _assert_schema_json_depth(value: Union[str, bytes]) -> None:
+    _assert_serialized_schema_depth(value, "{[", "}]")
+
+
+def _assert_schema_proto_text_depth(value: str) -> None:
+    _assert_serialized_schema_depth(value, "{<", "}>", allow_comments=True)
 
 
 def _proto_text_to_better_proto(
@@ -581,23 +623,17 @@ def _proto_text_to_better_proto(
             proto_text = f.read()
 
     try:
+        _assert_schema_proto_text_depth(proto_text)
         proto = text_format.Parse(proto_text, message)
-    except RecursionError as e:
-        raise ValueError(
-            "Schema nesting too deep (recursion limit hit while parsing)."
-        ) from e
-
-    # This is a hack because as of now we can't parse the Any representation.
-    # TODO: Fix this.
-    d = json_format.MessageToDict(proto)
-    _assert_schema_dict_depth(d)
-    for f in d["feature"]:
-        if "extraMetadata" in f["annotation"]:  # type: ignore
-            extra_metadata = f["annotation"].pop("extraMetadata")  # type: ignore
-            f["annotation"]["comment"] = [json.dumps(extra_metadata[0]["value"])]  # type: ignore
-    json_str = json_format.MessageToJson(json_format.ParseDict(d, message))
-
-    try:
+        # This is a hack because as of now we can't parse the Any representation.
+        # TODO: Fix this.
+        d = json_format.MessageToDict(proto)
+        _assert_schema_dict_depth(d)
+        for f in d["feature"]:
+            if "extraMetadata" in f["annotation"]:  # type: ignore
+                extra_metadata = f["annotation"].pop("extraMetadata")  # type: ignore
+                f["annotation"]["comment"] = [json.dumps(extra_metadata[0]["value"])]  # type: ignore
+        json_str = json_format.MessageToJson(json_format.ParseDict(d, message))
         return better_proto_message.__class__().from_json(json_str)
     except RecursionError as e:
         raise ValueError(
