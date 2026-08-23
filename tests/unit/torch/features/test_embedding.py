@@ -74,6 +74,24 @@ def test_table_config_invalid_embedding_initializer():
     assert "initializer must be callable if specified" in str(excinfo.value)
 
 
+def test_table_config_rejects_embedding_allocation_above_byte_limit():
+    # 10M categories is valid under the cardinality limit, but at dim=64 its
+    # float32 table would require 2.56 GB.
+    with pytest.raises(ValueError, match="max_table_bytes"):
+        tr.TableConfig(10**7, dim=64)
+
+
+def test_embedding_features_rejects_total_embedding_allocation_above_byte_limit():
+    # Each 2M x 64 table is below the 512 MiB per-table limit; three together
+    # exceed the default 1 GiB aggregate budget before any table is allocated.
+    feature_config = {
+        f"feature_{index}": tr.FeatureConfig(tr.TableConfig(2 * 10**6, dim=64))
+        for index in range(3)
+    }
+    with pytest.raises(ValueError, match="max_total_bytes"):
+        tr.EmbeddingFeatures(feature_config)
+
+
 def test_embedding_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
     emb_module = tr.EmbeddingFeatures.from_schema(schema)

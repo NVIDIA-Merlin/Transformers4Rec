@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import os
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Text, Union
 
@@ -45,6 +46,45 @@ EMBEDDING_FEATURES_PARAMS_DOCSTRING = """
 """
 
 
+# EmbeddingBagWrapper allocates float32 weights. Keep these limits separate
+# from the cardinality ceiling: a valid cardinality can still be unsafe when
+# paired with a large embedding dimension or many categorical columns.
+_EMBEDDING_PARAMETER_BYTES = 4
+_MAX_EMBEDDING_TABLE_BYTES = int(
+    os.environ.get("T4REC_MAX_EMBEDDING_TABLE_BYTES", str(512 * 1024**2))
+)
+_MAX_TOTAL_EMBEDDING_BYTES = int(
+    os.environ.get("T4REC_MAX_TOTAL_EMBEDDING_BYTES", str(1024**3))
+)
+
+
+def _embedding_table_bytes(vocabulary_size: int, dim: int) -> int:
+    return vocabulary_size * dim * _EMBEDDING_PARAMETER_BYTES
+
+
+def _validate_embedding_table_size(vocabulary_size: int, dim: int) -> None:
+    table_bytes = _embedding_table_bytes(vocabulary_size, dim)
+    if table_bytes > _MAX_EMBEDDING_TABLE_BYTES:
+        raise ValueError(
+            f"Embedding table requires {table_bytes} bytes, which exceeds "
+            f"max_table_bytes={_MAX_EMBEDDING_TABLE_BYTES}. Raise "
+            "T4REC_MAX_EMBEDDING_TABLE_BYTES if this allocation is intentional."
+        )
+
+
+def _validate_total_embedding_size(feature_config: Dict[str, "FeatureConfig"]) -> None:
+    total_bytes = sum(
+        _embedding_table_bytes(feature.table.vocabulary_size, feature.table.dim)
+        for feature in feature_config.values()
+    )
+    if total_bytes > _MAX_TOTAL_EMBEDDING_BYTES:
+        raise ValueError(
+            f"Embedding tables require {total_bytes} bytes in total, which exceeds "
+            f"max_total_bytes={_MAX_TOTAL_EMBEDDING_BYTES}. Raise "
+            "T4REC_MAX_TOTAL_EMBEDDING_BYTES if this allocation is intentional."
+        )
+
+
 @docstring_parameter(
     tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
     embedding_features_parameters=EMBEDDING_FEATURES_PARAMS_DOCSTRING,
@@ -73,6 +113,10 @@ class EmbeddingFeatures(InputBlock):
         self.item_id = item_id
         self.feature_config = feature_config
         self.filter_features = FilterFeatures(list(feature_config.keys()))
+
+        # Validate before creating any torch modules, so malformed or untrusted
+        # schemas cannot cause a partial allocation before being rejected.
+        _validate_total_embedding_size(feature_config)
 
         embedding_tables = {}
         features_dim = {}
@@ -458,6 +502,8 @@ class TableConfig:
 
         if not isinstance(dim, int) or dim < 1:
             raise ValueError("Invalid dim {}.".format(dim))
+
+        _validate_embedding_table_size(vocabulary_size, dim)
 
         if combiner not in ("mean", "sum", "sqrtn"):
             raise ValueError("Invalid combiner {}".format(combiner))
