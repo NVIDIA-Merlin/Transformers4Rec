@@ -269,7 +269,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             for i, task in enumerate(prediction_tasks):
                 self.prediction_task_dict[task.task_name] = task
 
-        self._task_weights = defaultdict()
+        self._task_weights = defaultdict(lambda: 1.0)
         if task_weights:
             for task, val in zip(cast(List[PredictionTask], prediction_tasks), task_weights):
                 self._task_weights[task.task_name] = val
