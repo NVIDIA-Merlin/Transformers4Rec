@@ -285,7 +285,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         device
         task_blocks
         """
-        if not getattr(self.body, "output_size", None)():
+        if not getattr(self.body, "output_size", lambda: None)():
             raise ValueError(
                 "Can't infer output-size of the body, please provide  "
                 "a `Block` with a output-size. You can wrap any torch.Module in a Block."
