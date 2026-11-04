@@ -23,6 +23,7 @@ from merlin.schema import Schema as Core_Schema
 
 import transformers4rec.torch as tr
 from transformers4rec.config import transformer as tconf
+from transformers4rec.torch.model.prediction_task import _NextItemPredictionTask
 
 if torch.cuda.is_available():
     devices = ["cpu", "cuda"]
@@ -387,6 +388,63 @@ def test_with_next_item_pred_sampled_softmax(torch_yoochoose_like, yoochoose_sch
     task = tr.NextItemPredictionTask(weight_tying=True, sampled_softmax=True, max_n_samples=1000)
     model = transformer_config.to_torch_model(input_module, task)
     assert model(torch_yoochoose_like, training=True)
+
+
+@pytest.mark.parametrize("temperature", [0.05, 0.2, 1, 2, 0])
+def test_sampled_softmax_applies_logq_correction_after_temperature(temperature):
+    n_items, d_model, batch_size = 200, 8, 32
+    torch.manual_seed(0)
+    layer = _NextItemPredictionTask(
+        input_size=[batch_size, d_model],
+        target_dim=n_items,
+        softmax_temperature=temperature,
+        sampled_softmax=True,
+        max_n_samples=40,
+    )
+    inputs = torch.randn(batch_size, d_model)
+    targets = torch.randint(0, n_items, (batch_size,))
+
+    torch.manual_seed(1)
+    negatives, targets_probs, samples_probs = layer.sampler.sample(targets)
+    torch.manual_seed(1)
+    logits, new_targets = layer(inputs, targets, training=True)
+    logits = logits.detach()
+
+    weights = layer.output_layer.detach()
+    scores = torch.cat(
+        [(inputs * weights[targets]).sum(-1, keepdim=True), inputs @ weights[negatives].t()], dim=1
+    )
+    log_q = torch.cat(
+        [
+            torch.log(targets_probs + 1e-16)[:, None],
+            torch.log(samples_probs + 1e-16)[None, :].expand(batch_size, -1),
+        ],
+        dim=1,
+    )
+    expected = scores / (temperature or 1.0) - log_q
+
+    # Accidental hits are masked, so they are not compared.
+    not_masked = torch.cat(
+        [torch.ones(batch_size, 1, dtype=torch.bool), targets[:, None] != negatives[None, :]], dim=1
+    )
+    assert torch.allclose(logits[not_masked], expected[not_masked], atol=1e-3)
+    assert (new_targets == 0).all()
+
+
+@pytest.mark.parametrize("temperature", [0.2, 1, 0])
+def test_eval_logits_have_no_logq_correction(temperature):
+    torch.manual_seed(0)
+    layer = _NextItemPredictionTask(
+        input_size=[4, 8],
+        target_dim=50,
+        softmax_temperature=temperature,
+        sampled_softmax=True,
+        max_n_samples=10,
+    )
+    inputs = torch.randn(4, 8)
+    logits, _ = layer(inputs, torch.zeros(4, dtype=torch.int64), training=False)
+    expected = inputs @ layer.output_layer.detach().t() / (temperature or 1.0)
+    assert torch.allclose(logits.detach(), expected)
 
 
 @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])

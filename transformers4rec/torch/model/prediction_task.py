@@ -683,8 +683,11 @@ class _NextItemPredictionTask(torch.nn.Module):
         # logQ correction, to not overpenalize popular items for being sampled
         # more often as negatives
         epsilon = 1e-16
-        positive_scores -= torch.unsqueeze(torch.log(targets_probs + epsilon), dim=-1)
-        negative_scores -= torch.unsqueeze(torch.log(samples_probs + epsilon), dim=0)
+        # forward() divides by softmax_temperature afterwards, so scale the correction
+        # to get s / T - log q. Otherwise training is biased towards popular items.
+        temperature = self.softmax_temperature or 1.0
+        positive_scores -= temperature * torch.unsqueeze(torch.log(targets_probs + epsilon), dim=-1)
+        negative_scores -= temperature * torch.unsqueeze(torch.log(samples_probs + epsilon), dim=0)
 
         # Remove accidental matches
         accidental_hits = torch.unsqueeze(targets, -1) == torch.unsqueeze(neg_samples, 0)
