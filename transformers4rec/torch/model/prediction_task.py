@@ -842,7 +842,13 @@ class LogUniformSampler(torch.nn.Module):
         with torch.no_grad():
             neg_samples = torch.multinomial(
                 self.dist, n_tries, replacement=True  # type: ignore
-            ).unique()[: self.max_n_samples]
+            ).unique()
+            if len(neg_samples) > self.max_n_samples:
+                # unique() sorts the ids, so truncating would keep only the smallest ones.
+                # A random subset keeps every id with the same conditional probability,
+                # which is a common factor of all candidates and cancels in the softmax.
+                keep = torch.randperm(len(neg_samples), device=neg_samples.device)
+                neg_samples = neg_samples[keep[: self.max_n_samples]]
 
             device = labels.device
             neg_samples = neg_samples.to(device)

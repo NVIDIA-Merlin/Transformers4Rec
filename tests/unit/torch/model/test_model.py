@@ -442,3 +442,26 @@ def test_save_next_item_prediction_model(
     assert isinstance(out_schema, Core_Schema)
     assert len(out_schema) == 1
     assert out_schema.column_names[0] == "next-item"
+
+
+def test_log_uniform_sampler_unique_sampling_does_not_drop_large_ids():
+    from transformers4rec.torch.model.prediction_task import LogUniformSampler
+
+    torch.manual_seed(0)
+    sampler = LogUniformSampler(max_n_samples=64, max_id=1000, unique_sampling=True)
+    counts = torch.zeros_like(sampler.dist)
+    n_calls = 3000
+    for _ in range(n_calls):
+        neg_samples, _, _ = sampler.sample(torch.tensor([0]))
+        assert len(neg_samples) <= sampler.max_n_samples
+        counts[neg_samples] += 1
+
+    # How often each group of ids is sampled, relative to the probabilities the sampler
+    # returns for the logQ correction. The ratio may differ from 1 by a common factor,
+    # which cancels in the softmax, but it must be the same for frequent and rare ids.
+    groups = [(0, 50), (50, 300), (300, 1000)]
+    ratios = [
+        float(counts[lo:hi].sum() / n_calls / sampler.unique_sampling_dist[lo:hi].sum())
+        for lo, hi in groups
+    ]
+    assert max(ratios) / min(ratios) < 1.05, ratios
